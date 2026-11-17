@@ -284,14 +284,17 @@ function render(){ renderTabs(); renderControls(); renderFlow(); renderPanel(); 
 /* ---- run: the shared engine, one separate call to Claude per box ---- */
 let sample=null, toolsOK=false, db=null;
 /* every run is saved in this artifact's own database (collection "runs"); "sync" in Claude Code reads it into logs/runs.json */
-(async()=>{ try{ db=window.claude&&window.claude.use?await window.claude.use("db"):null; }catch(e){ db=null; } if(ST.tab==="decide") renderPanel(); })();
+(async()=>{ try{ db=window.claude&&window.claude.use?await window.claude.use("db"):null; }catch(e){ db=null; }
+  /* runs made before saving was possible, or whose save failed, are saved now */
+  if(db){ for(const l of ST.log){ if(l.saved!==true){ await saveRun(l); if(l.saved===false) break; } } save(); }
+  if(ST.tab==="decide") renderPanel(); })();
 const clean=l=>{ const r={...l}; delete r.status; delete r.labels; delete r.hot; delete r.saved; return r; };
 async function saveRun(rec){
   if(!db){ rec.saved=false; return; }
   let body={...clean(rec),variation:VARIATION};
   if(JSON.stringify(body).length>240000) body.steps=(body.steps||[]).map(s=>({...s,prompt:"(left out: too long to save)"}));
   if(JSON.stringify(body).length>240000) body.steps=[];
-  const id=(rec.date_time+"-"+rec.run_id+"-"+Math.random().toString(36).slice(2,6)).replace(/[^A-Za-z0-9_\-.~:@+]/g,"-");
+  const id=(rec.date_time+"-"+rec.run_id).replace(/[^A-Za-z0-9_\-.~:@+]/g,"-");
   try{ await db.collection("runs").doc(id).set(body); rec.saved=true; }
   catch(e){ if(e&&e.code==="unavailable"){ try{ await new Promise(r=>setTimeout(r,800+Math.random()*800)); await db.collection("runs").doc(id).set(body); rec.saved=true; return; }catch(e2){} } rec.saved=false; }
 }
