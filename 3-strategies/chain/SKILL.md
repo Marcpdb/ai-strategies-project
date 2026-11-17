@@ -19,13 +19,13 @@ This folder turns the student's manual dashboard (`2-manual-dashboard/dashboard.
 Follow `reference/build-dashboard.md`, with the dashboard in `dashboard/` of this folder. For this strategy:
 
 - Each step usually fits one tab of the workflow: map them in order.
-- The gate is code, not an LLM: keep its maximum number of words from the export. When it fails, the flow ends in the Out box of the Fail line; show that result on the decision tab.
+- The gate is code, not an LLM: keep its maximum number of words from the export. When it fails, the flow ends in the Out box of the Fail line; that result shows as the advice under the flow.
 
 ## Then: the evaluation
 
-The dashboard has one button per test next to Run (6 tests, 3 runs each). Each button makes its own change automatically and logs it; see `reference/evaluation.md`. The student runs every test, codes every run on the last tab, downloads both log files and types "sync". When all 6 tests are done, "findings" writes `findings.md` in each folder of `evaluation/`:
+The dashboard has an Evaluation test dropdown next to Run (6 tests, 3 runs each). Each button makes its own change automatically and logs it; see `reference/evaluation.md`. The student runs every test, clicks Download log and types "sync". When all 6 tests are done, "findings" codes every run and writes `findings.md` in each folder of `evaluation/`:
 
-| Folder | Button | Step |
+| Folder | Test | Step |
 |---|---|---|
 | `1-baseline-stability` | Baseline | Document and Compare (TIA) |
 | `2-vary-wording` | Wording | Vary (systematic prompt variation) |

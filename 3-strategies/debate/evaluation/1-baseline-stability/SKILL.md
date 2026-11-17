@@ -7,7 +7,7 @@ description: "Evaluation test 'Baseline and stability' for the Debate strategy. 
 
 **Question.** Document and Compare (TIA): what exactly produced this result, and do repeated runs give the same outcome?
 
-**How it runs.** The **Baseline** button next to Run in the Debate dashboard (`../../dashboard/`), 3 runs. Nothing to set up by hand. `variation_type` in the log: `baseline`.
+**How it runs.** Choose **Baseline** in the Evaluation test dropdown of the Debate dashboard (`../../dashboard/`) and click Run test: 3 runs. Nothing to set up by hand. `variation_type` in the log: `baseline`.
 
 **What changes.** Nothing. The Baseline button runs the strategy as built, 3 times, on the input fixed at the first test run. Every other test is compared with it.
 

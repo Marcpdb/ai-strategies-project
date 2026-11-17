@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a student's workflow dashboard (example: planning dinner for guests with different diets) (one tab per step) as a separate agentic version for ONE strategy. Under the tabs: the AI flow (In to Out, live). Left: the tab, with the agent that works on this step on top and the original content below. Right: the agents' conversation, every step with what went in and what came out. Next to Run: one button per evaluation test; each test makes its own change automatically (an extra prompt), runs 3 times and logs everything. The last tab: the advice, the coding of every run, and the run log. */
+/* Layout: a student's workflow dashboard (example: planning dinner for guests with different diets) (one tab per step) as a separate agentic version for ONE strategy. Under the tabs: the AI flow (In to Out, live). Left: the tab, with the agent that works on this step on top and the original content below. Right: the agents' conversation, every step with what went in and what came out. Top right, next to Run: a small dropdown with the evaluation tests; each test makes its own change automatically (an extra prompt), runs 3 times and logs everything. Under the flow: the advice of the run shown. The run log is downloaded for the findings. */
 :root{
   --page:#f0eee6; --card:#ffffff; --ink:#1f1e1b; --muted:#6f6c64; --line:#e3e0d6;
   --green-fill:#eef4e7; --green-line:#b7d29c; --green-ink:#5b8a30;
@@ -87,14 +87,14 @@ td.num{font-family:var(--f-mono);text-align:right} td.cut{max-width:260px;overfl
 .m pre{white-space:pre-wrap;font-family:var(--f-mono);font-size:11.5px;background:var(--page);border:1px solid var(--line);border-radius:6px;padding:7px;margin:4px 0;max-height:220px;overflow:auto}
 .round{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;border-top:1px solid var(--line);padding-top:6px}
 
-.rec{border:2px solid var(--live);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
-.rec .big{font-size:22px;font-weight:700}
 .gate{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
 .pill{background:var(--green-fill);color:var(--green-ink);border-radius:999px;padding:3px 10px;font-weight:600;font-size:13px}
-.evalbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-top:1px solid var(--line);padding-top:8px} .evalbar>span{font-size:11.5px;font-weight:600;color:var(--muted);margin-right:4px}
-.tbtn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px;display:flex;gap:6px;align-items:center} .tbtn[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)} .tbtn .c{font-family:var(--f-mono);font-size:11px;color:var(--muted)} .tbtn.done .c{color:var(--green-ink);font-weight:600}
-.tbox{border:1px dashed var(--code-line);background:color-mix(in srgb,var(--code-fill) 45%,transparent);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px} .tbox textarea{width:100%;font-family:var(--f-mono);font-size:12px;background:var(--page);border:1px solid var(--line);border-radius:6px;padding:7px} .tbox pre{white-space:pre-wrap;font-family:var(--f-mono);font-size:11.5px;margin:0;max-height:160px;overflow:auto}
-.alldone{border:2px solid var(--green-line);background:var(--green-fill);border-radius:10px;padding:10px 12px;color:var(--green-ink);font-weight:600}
+.ctl .sm{font-size:12.5px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);max-width:230px} .ctl .f.mini>span{font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.vsep{width:1px;align-self:stretch;background:var(--line);margin:0 2px}
+.tdet{font-size:12.5px;color:var(--muted)} .tdet summary{cursor:pointer;list-style:none;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap} .tdet summary::-webkit-details-marker{display:none} .tdet summary::before{content:"▸";font-size:10px} .tdet[open] summary::before{content:"▾"}
+.tdet .body{margin-top:8px;border-left:2px solid var(--code-line);padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:8px;color:var(--ink)} .tdet textarea{width:100%;font-family:var(--f-mono);font-size:12px;background:var(--page);border:1px solid var(--line);border-radius:6px;padding:7px} .tdet pre{white-space:pre-wrap;font-family:var(--f-mono);font-size:11.5px;margin:0;max-height:160px;overflow:auto}
+.done{color:var(--green-ink);font-weight:600}
+.advice{border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:4px} .advice .big{font-size:17px;font-weight:700} .advice details{font-size:13px} .advice summary{cursor:pointer;color:var(--muted)} .advice pre{white-space:pre-wrap;font-family:var(--f-ui);font-size:13.5px;margin:6px 0 0}
 .coding{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px} @media (max-width:640px){.coding{grid-template-columns:1fr 1fr}}
 h3{margin:18px 0 6px;font-size:14px}
 </style>
@@ -109,12 +109,18 @@ h3{margin:18px 0 6px;font-size:14px}
   <section class="card flowcard" aria-label="AI flow">
     <div class="top"><h2>AI flow · __STRAT_NAME__ · from In to Out</h2>
       <div class="ctl">
+        <label class="f mini"><span>Run shown</span><select class="sm" id="runSel"></select></label>
+        <span class="vsep" aria-hidden="true"></span>
+        <label class="f mini"><span>Evaluation test</span><select class="sm" id="testSel"></select></label>
+        <button class="btn sm" type="button" id="testRun">Run test</button>
+        <button class="btn sm" type="button" id="dlLog" title="Downloads the run log as CSV and JSON, for sync and findings">Download log</button>
+        <span class="vsep" aria-hidden="true"></span>
         <button class="btn run" type="button" id="runBtn" title="One run with the data of the tabs. Not part of the evaluation.">Run</button><button class="btn" type="button" id="stopBtn" hidden>Stop</button>
       </div></div>
-    <div class="evalbar" id="evalbar" role="group" aria-label="Evaluation tests"></div>
-    <div class="tbox" id="tbox" hidden></div>
+    <details class="tdet" id="tdet"><summary id="tsum"></summary><div class="body" id="tbody"></div></details>
     <div class="svgbox"><svg class="d" id="flow" role="img" aria-label="Agent flow"></svg></div>
     <div class="top"><span class="msg" id="msg" aria-live="polite">Click a box to open its step.</span><span class="stats" id="stats"></span></div>
+    <div class="advice" id="advice"></div>
   </section>
 
   <div class="main">
@@ -137,7 +143,7 @@ const DISHES=[
   {name:"Mushroom risotto",key:"risotto",cost:16,min:45,kitchen:"one hob",with:"mushrooms, butter, parmesan",tags:["mushrooms","lactose"],spicy:false},
   {name:"Chickpea and tomato stew with bread",key:"stew",cost:12,min:35,kitchen:"one hob",with:"vegan",tags:[],spicy:false}];
 const GUESTS=[{name:"Anna",diet:"vegetarian",avoid:["meat"]},{name:"Ben",diet:"allergic to nuts",avoid:["nuts"]},{name:"Chloé",diet:"loves spicy food, does not like mushrooms",avoid:["mushrooms"]},{name:"David",diet:"lactose intolerant",avoid:["lactose"]}];
-const STEPS=[{id:"guests",n:1,label:"Guests"},{id:"dishes",n:2,label:"Dishes"},{id:"diets",n:3,label:"Diets"},{id:"budget",n:4,label:"Budget & time"},{id:"decide",n:5,label:"Decide"}];
+const STEPS=[{id:"guests",n:1,label:"Guests"},{id:"dishes",n:2,label:"Dishes"},{id:"diets",n:3,label:"Diets"},{id:"budget",n:4,label:"Budget & time"}];
 /* the possible outcomes, read from the line "Advice: <outcome>" */
 const OUTCOMES=DISHES.map(d=>({name:d.name,keys:[d.key]}));
 /* ---- the strategy, rebuilt from the "Boxes" section of the student's strategy file ---- */
@@ -176,7 +182,7 @@ function caseText(){ return "What do we cook tonight? Four friends come for dinn
 
 /* ---- saved state ---- */
 const KEY="ai-dash-"+STRATEGY.version;
-const ST={tab:"guests",budget:30,minutes:45,kitchen:"one oven, two hobs",log:[],review:null,seq:0,test:null,extra:{},vars:{},evalInput:null};
+const ST={tab:"guests",budget:30,minutes:45,kitchen:"one oven, two hobs",log:[],review:null,seq:0,test:"baseline",extra:{},vars:{},evalInput:null};
 try{ Object.assign(ST,JSON.parse(localStorage.getItem(KEY)||"{}")); }catch(e){}
 const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(ST)); }catch(e){} };
 
@@ -214,7 +220,7 @@ function renderFlow(){
   $("flow").innerHTML=h;
   const r=shownRun(); $("stats").textContent = r&&r.calls!=null ? `${r.calls} calls · ≈${(r.tokens_est||0).toLocaleString()} tokens (estimate) · ${r.seconds} s${r.run_id?" · run "+r.run_id:""}` : (live?"running…":"");
 }
-const goNode=id=>{ const n=by[id]; ST.tab = n.type==="in"?STEPS[0].id:(n.type==="out"?"decide":(STEP_OF[id]||ST.tab)); save(); render(); };
+const goNode=id=>{ const n=by[id]; ST.tab = n.type==="in"?STEPS[0].id:(n.type==="out"?ST.tab:(STEP_OF[id]||ST.tab)); save(); render(); };
 $("flow").addEventListener("click",e=>{ const g=e.target.closest("[data-go]"); if(g) goNode(g.dataset.go); });
 $("flow").addEventListener("keydown",e=>{ const g=e.target.closest("[data-go]"); if(g&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); goNode(g.dataset.go); } });
 
@@ -226,8 +232,8 @@ function renderMsgs(){
   S.forEach(s=>{
     if(s.round&&s.round!==lastRound&&s.type==="debater"){ h+=`<div class="round">Round ${s.round}</div>`; } if(s.type==="debater") lastRound=s.round;
     const tab=STEPS.find(t=>t.id===STEP_OF[s.id]);
-    if(s.type==="in"){ h+=`<div class="m io"><div class="who">In <small>from steps 1 to 4 · the case</small></div><div class="txt">${esc(s.output)}</div></div>`; return; }
-    if(s.type==="out"){ h+=`<div class="m io"><div class="who">Out <small>to step 5 · Decide</small></div><div class="txt">${esc(s.output)}</div></div>`; return; }
+    if(s.type==="in"){ h+=`<div class="m io"><div class="who">In <small>from the tabs · the case</small></div><div class="txt">${esc(s.output)}</div></div>`; return; }
+    if(s.type==="out"){ h+=`<div class="m io"><div class="who">Out <small>the advice</small></div><div class="txt">${esc(s.output)}</div></div>`; return; }
     if(s.type==="gate"||s.type==="tool"){ h+=`<div class="m sys"><div class="who">${esc(s.label)}</div><div class="txt">${esc(s.input?s.input+"\n→ ":"")}${esc(String(s.output).slice(0,600))}</div></div>`; return; }
     h+=`<div class="m ${s.t_end==null?"running":""}"><div class="who">${esc(s.label)}${tab?` <small>step ${tab.n}</small>`:""}${s.round?` <small>round ${s.round}</small>`:""} <small>${esc(s.model_answered||s.model_asked||"")}${s.t_end!=null?" · "+((s.t_end-s.t_start)/1000).toFixed(1)+" s":""}</small></div>
       <div class="txt">${esc(s.output)||"…"}${s.note?"\n\n→ "+esc(s.note):""}</div>
@@ -260,34 +266,19 @@ function bindTab(){ const bind=(id,k,num)=>{ const el=$(id); if(el) el.addEventL
 /* ---- END of the dashboard's own tabs ---- */
 
 function renderPanel(){
-  const s=STEPS.find(x=>x.id===ST.tab)||STEPS[0]; let h=agentCards(s.id);
-  h+= s.id==="decide" ? `<h2>${s.n} · ${esc(s.label)}</h2>`+adviceHtml()+evalStatusHtml()+logHtml() : tabHtml(s.id);
-  $("panel").innerHTML=h; bindTab();
-  document.querySelectorAll("[data-review]").forEach(b=>b.onclick=()=>{ ST.review=+b.dataset.review; save(); restore(ST.log[ST.review]); render(); });
-  document.querySelectorAll("[data-code]").forEach(el=>el.addEventListener("change",()=>{ const l=ST.log[ST.review]; if(l){ l[el.dataset.code]=el.value; save(); if(el.tagName==="SELECT") renderPanel(); } }));
-  if($("csv")) $("csv").onclick=()=>download(logName()+".csv",csv());
-  if($("json")) $("json").onclick=()=>download(logName()+".json",JSON.stringify({strategy:STRATEGY.strategy,version:STRATEGY.version,runs_per_test:RUNS_PER_TEST,tests:TESTS.map(t=>t.type),evaluation_input:ST.evalInput,variations:ST.vars,runs:ST.log.map(l=>{ const r={...l}; delete r.status; delete r.labels; delete r.hot; return r; })},null,2));
-  if($("clearEval")) $("clearEval").onclick=()=>{ const b=$("clearEval"); if(!b.dataset.sure){ b.dataset.sure="1"; b.textContent="Yes, delete every run of the evaluation"; return; } ST.log=ST.log.filter(l=>l.variation_type==="run"); ST.vars={}; ST.evalInput=null; ST.review=null; save(); restore(null); render(); };
+  const s=STEPS.find(x=>x.id===ST.tab)||STEPS[0];
+  $("panel").innerHTML=agentCards(s.id)+tabHtml(s.id); bindTab();
 }
-function adviceHtml(){
-  const l=ST.review!=null?ST.log[ST.review]:null;
-  if(!l) return `<div class="rec"><span class="hint">No advice yet. Press Run, or run a test.</span></div>`;
+/* the advice of the run shown, under the flow */
+function renderAdvice(){
+  const l=live?null:(ST.review!=null?ST.log[ST.review]:null);
+  if(!l){ $("advice").innerHTML=live?"":`<span class="hint">No advice yet. Press Run, or run an evaluation test.</span>`; return; }
   const T=TESTS.find(t=>t.type===l.variation_type);
-  return `<div class="rec"><span class="hint">AI advice · run ${esc(l.run_id)} · ${esc(T?T.label+" test, run "+l.repeat_no+" of "+RUNS_PER_TEST:"free run")}${l.what_changed?" · changed: "+esc(l.what_changed):""}</span><span class="big">${esc(l.ai_outcome||"(no clear outcome)")}</span><div style="white-space:pre-wrap">${esc(l.error||l.ai_output)}</div>
-    <div class="coding">${codeSel("verdict","Verdict (your coding)",[["","-"],["correct","correct"],["partly","partly correct"],["wrong","wrong"],["unsure","cannot judge"]],l)}${codeSel("uncertainty_flagged","Flags uncertainty?",[["",""],["yes","yes"],["no","no"]],l)}${codeSel("fabricated","Makes things up?",[["",""],["yes","yes"],["no","no"]],l)}
-      <label class="f"><span>Note</span><input type="text" data-code="coder_note" value="${esc(l.coder_note)}"></label></div></div>`;
+  $("advice").innerHTML=`<span class="hint">Advice · run ${esc(l.run_id)} · ${esc(T?T.label+" test, run "+l.repeat_no+" of "+RUNS_PER_TEST:"free run")}${l.what_changed?" · changed: "+esc(l.what_changed):""}</span><span class="big">${esc(l.error?"Error: "+l.error:(l.ai_outcome||"(no clear outcome)"))}</span>${l.ai_output?`<details><summary>Full answer</summary><pre>${esc(l.ai_output)}</pre></details>`:""}`;
 }
-const codeSel=(k,t,opts,l)=>`<label class="f"><span>${t}</span><select data-code="${k}">${opts.map(([v,x])=>`<option value="${v}" ${l[k]===v?"selected":""}>${x}</option>`).join("")}</select></label>`;
-function evalStatusHtml(){
-  const rows=TESTS.map(t=>{ const L=ST.log.filter(l=>l.variation_type===t.type&&!l.error); const c={}; L.forEach(l=>c[l.ai_outcome]=(c[l.ai_outcome]||0)+1); const top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
-    return `<tr><td>${esc(t.label)}</td><td class="num">${Math.min(L.length,RUNS_PER_TEST)} / ${RUNS_PER_TEST}</td><td>${top?esc(top[1]+" of "+L.length+" runs: "+(top[0]||"no clear outcome")):"-"}</td><td>${L.filter(l=>l.verdict).length} of ${L.length}</td></tr>`; }).join("");
-  return `<h3>Evaluation</h3>${allDone()?`<div class="alldone">All ${TESTS.length} tests are done. Code every run (verdict, flags uncertainty, makes things up), download both files below, and type sync, then findings, in Claude Code.</div>`:`<p class="hint">Run every test with the buttons next to Run (${RUNS_PER_TEST} runs each). Findings can be written once all ${TESTS.length} tests are done.</p>`}
-    <div class="tablebox"><table><thead><tr><th>Test</th><th>Runs</th><th>Same outcome</th><th>Coded</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-}
-function logHtml(){
-  return `<h3>Run log</h3><div class="tablebox"><table><thead><tr><th>Run</th><th>Time</th><th>Test</th><th>Changed</th><th>AI outcome</th><th>Verdict</th><th></th></tr></thead><tbody>${ST.log.map((l,i)=>`<tr><td>${esc(l.run_id)}</td><td>${esc(new Date(l.date_time).toLocaleString([],{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}))}</td><td>${esc(l.variation_type)}</td><td class="cut" title="${esc(l.what_changed)}">${esc(l.what_changed)}</td><td>${esc(l.error?"error":l.ai_outcome)}</td><td>${esc(l.verdict||"-")}</td><td><button class="btn sm" type="button" data-review="${i}">${ST.review===i?"Shown":"Show"}</button></td></tr>`).reverse().join("")||`<tr><td colspan="7" class="hint">No runs yet.</td></tr>`}</tbody></table></div>
-    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="csv">Download log (CSV)</button><button class="btn sm" type="button" id="json">Download log with all steps (JSON)</button>${ST.log.some(l=>l.variation_type!=="run")?`<button class="btn sm" type="button" id="clearEval">Start the evaluation over</button>`:""}</div>`;
-}
+const logJSON=()=>JSON.stringify({strategy:STRATEGY.strategy,version:STRATEGY.version,runs_per_test:RUNS_PER_TEST,tests:TESTS.map(t=>t.type),evaluation_input:ST.evalInput,variations:ST.vars,runs:ST.log.map(l=>{ const r={...l}; delete r.status; delete r.labels; delete r.hot; return r; })},null,2);
+$("dlLog").addEventListener("click",async()=>{ if(!ST.log.length){ $("msg").textContent="No runs yet."; return; } await download(logName()+".csv",csv()); await download(logName()+".json",logJSON()); if(/^Saved/.test($("msg").textContent)) $("msg").textContent="Saved "+logName()+".csv and .json. Type sync in Claude Code."; });
+$("runSel").addEventListener("change",e=>{ ST.review=e.target.value===""?null:+e.target.value; save(); restore(ST.review!=null?ST.log[ST.review]:null); render(); });
 
 /* ---- the evaluation tests: one button each, next to Run. Each test makes ONE change automatically,
    with an extra prompt the student can read and edit, and runs RUNS_PER_TEST times on the same input. ---- */
@@ -338,20 +329,25 @@ async function makeVariation(t,input){
 function applyVariation(v){ const g={nodes:clone(G.nodes),edges:clone(G.edges)}; g.nodes.forEach(n=>{ const c=v&&v.changes[n.id]; if(c) Object.assign(n.cfg,c); }); return g; }
 
 function renderEval(){
-  $("evalbar").innerHTML=`<span>Evaluation · ${RUNS_PER_TEST} runs per test</span>`+TESTS.map(t=>{ const d=doneOf(t.type); return `<button class="tbtn ${d>=RUNS_PER_TEST?"done":""}" type="button" data-test="${t.type}" aria-pressed="${ST.test===t.type}" title="${esc(t.q)}">${esc(t.label)}<span class="c">${Math.min(d,RUNS_PER_TEST)}/${RUNS_PER_TEST}</span></button>`; }).join("")+(allDone()?`<span class="pill">all tests done</span>`:"");
-  const t=TESTS.find(x=>x.type===ST.test); $("tbox").hidden=!t; if(!t) return;
-  const v=ST.vars[t.type], d=doneOf(t.type), left=Math.max(0,RUNS_PER_TEST-d);
-  $("tbox").innerHTML=`<div><b>${esc(t.label)}</b> <span class="hint">· ${esc(t.step)} · ${esc(t.q)}</span></div><div class="hint">${esc(t.change)}</div>
-    ${t.extra?(v?`<div class="f"><span>Extra prompt used</span><pre>${esc(v.extra_prompt)}</pre></div>`:`<label class="f"><span>Extra prompt (you can change it before the first run of this test)</span><textarea id="extra" rows="3">${esc(ST.extra[t.type]!=null?ST.extra[t.type]:t.extra)}</textarea></label>`):""}
+  const sel=TESTS.find(x=>x.type===ST.test)||TESTS[0]; ST.test=sel.type;
+  $("testSel").innerHTML=TESTS.map(t=>{ const d=Math.min(doneOf(t.type),RUNS_PER_TEST); return `<option value="${t.type}" ${t.type===sel.type?"selected":""}>${esc(t.label)} · ${d}/${RUNS_PER_TEST}${d>=RUNS_PER_TEST?" ✓":""}</option>`; }).join("");
+  const left=Math.max(0,RUNS_PER_TEST-doneOf(sel.type)), nDone=TESTS.filter(t=>doneOf(t.type)>=RUNS_PER_TEST).length;
+  $("testRun").textContent=left?"Run test":"Done"; $("testRun").disabled=!left||!sample||running; $("testSel").disabled=running;
+  $("runSel").innerHTML=`<option value="">${ST.log.length?"choose a run":"no runs yet"}</option>`+ST.log.map((l,i)=>`<option value="${i}" ${ST.review===i?"selected":""}>${esc(l.run_id)} · ${esc(l.variation_type==="run"?"free run":l.variation_type+" "+l.repeat_no+"/"+RUNS_PER_TEST)} · ${esc(l.error?"error":(l.ai_outcome||"?"))}</option>`).reverse().join(""); $("runSel").disabled=running||!ST.log.length;
+  const v=ST.vars[sel.type];
+  $("tsum").innerHTML=`<span>${esc(sel.label)}: ${esc(sel.q)}</span><span>·</span><span class="${nDone===TESTS.length?"done":""}">${nDone} of ${TESTS.length} tests done</span>`;
+  $("tbody").innerHTML=`<div><b>${esc(sel.label)}</b> <span class="hint">· ${esc(sel.step)}</span></div><div>${esc(sel.change)} ${RUNS_PER_TEST} runs, on the same input as every other test${ST.evalInput?" (fixed at the first test run)":" (the data of the tabs at the first test run)"}.</div>
+    ${sel.extra?(v?`<div class="f"><span>Extra prompt used</span><pre>${esc(v.extra_prompt)}</pre></div>`:`<label class="f"><span>Extra prompt (you can change it before the first run of this test)</span><textarea id="extra" rows="3">${esc(ST.extra[sel.type]!=null?ST.extra[sel.type]:sel.extra)}</textarea></label>`):""}
     ${v&&v.what?`<div class="f"><span>What was changed (the same in every run of this test)</span><pre>${esc(v.what)}</pre></div>`:""}
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn run" type="button" id="testRun" ${left&&sample&&!running?"":"disabled"}>${left?"Run "+t.label+" ("+left+" run"+(left>1?"s":"")+" left)":"Done: "+RUNS_PER_TEST+" runs"}</button>
-    <span class="hint">Every test uses the same input${ST.evalInput?", fixed at the first test run":": the data of the tabs at the first test run"}.</span></div>`;
-  if($("extra")) $("extra").addEventListener("input",e=>{ ST.extra[t.type]=e.target.value; save(); });
-  if($("testRun")) $("testRun").onclick=()=>runTest(t.type);
+    ${nDone===TESTS.length?`<div class="done">All ${TESTS.length} tests are done. Download the log, type sync in Claude Code, then findings.</div>`:""}
+    ${ST.log.some(l=>l.variation_type!=="run")?`<div><button class="btn sm" type="button" id="clearEval">Start the evaluation over</button></div>`:""}`;
+  if($("extra")) $("extra").addEventListener("input",e=>{ ST.extra[sel.type]=e.target.value; save(); });
+  if($("clearEval")) $("clearEval").onclick=()=>{ const b=$("clearEval"); if(!b.dataset.sure){ b.dataset.sure="1"; b.textContent="Yes, delete every run of the evaluation"; return; } ST.log=ST.log.filter(l=>l.variation_type==="run"); ST.vars={}; ST.evalInput=null; ST.review=null; save(); restore(null); render(); };
 }
-$("evalbar").addEventListener("click",e=>{ const b=e.target.closest("[data-test]"); if(!b||running) return; ST.test=ST.test===b.dataset.test?null:b.dataset.test; save(); renderEval(); });
+$("testSel").addEventListener("change",e=>{ ST.test=e.target.value; save(); renderEval(); });
+$("testRun").addEventListener("click",()=>runTest(ST.test));
 function renderControls(){ $("runBtn").disabled=running||!sample; $("stopBtn").hidden=!running; }
-function render(){ renderTabs(); renderControls(); renderEval(); renderFlow(); renderPanel(); renderMsgs(); }
+function render(){ renderTabs(); renderControls(); renderEval(); renderFlow(); renderPanel(); renderMsgs(); renderAdvice(); }
 
 /* ---- run: the shared engine, one separate call to Claude per box ---- */
 let sample=null, toolsOK=false;
@@ -372,7 +368,7 @@ async function runOnce(type,v){
   const rec={run_id:"D"+String(ST.seq).padStart(3,"0"),date_time:new Date().toISOString(),source:"dashboard",strategy:STRATEGY.strategy,strategy_version:STRATEGY.version,run_version:ENGINE.version(g),input,
     variation_type:type,what_changed:v?v.what:"",extra_prompt:v?v.extra_prompt:"",extra_output:v?v.extra_output:"",repeat_no:ST.log.filter(l=>l.variation_type===type&&!l.error).length+1,
     models_asked:res?res.models_asked.join("; "):"",models_answered:res?res.models_answered.join("; "):"",
-    ai_output:res?res.output:"",ai_outcome:res?outcomeOf(res.output):"",verdict:"",uncertainty_flagged:"",fabricated:"",coder_note:"",
+    ai_output:res?res.output:"",ai_outcome:res?outcomeOf(res.output):"",
     calls:res?res.calls:0,tokens_est:res?res.tokens_est:0,seconds:res?res.seconds:null,error:err?(err.msg||err.code||"failed"):"",
     steps:res?res.steps:live.steps,status:{...status},labels:{...labels},hot:[...hot]};
   ST.log.push(rec); ST.review=ST.log.length-1; live=null; bubbles={}; save();
@@ -380,21 +376,21 @@ async function runOnce(type,v){
 }
 async function guarded(label,fn){
   if(running||!sample) return; running=true; ctl=new AbortController(); $("msg").classList.remove("err"); $("msg").textContent=label; renderControls(); renderEval();
-  try{ await fn(); ST.tab="decide"; }
+  try{ await fn(); }
   catch(e){ $("msg").classList.add("err"); $("msg").textContent=e.msg||ERR[e.code]||"Something went wrong. Try again."; }
   running=false; save(); restore(shownRun()); render();
 }
-$("runBtn").addEventListener("click",()=>guarded("Running…",async()=>{ await runOnce("run",null); $("msg").textContent="Done. The advice is on the last tab. This free run is not part of the evaluation."; }));
+$("runBtn").addEventListener("click",()=>guarded("Running…",async()=>{ await runOnce("run",null); $("msg").textContent="Done. The advice is under the flow. This free run is not part of the evaluation."; }));
 function runTest(type){ const T=TESTS.find(t=>t.type===type);
   guarded("Preparing the "+T.label+" test…",async()=>{
     if(!ST.evalInput){ ST.evalInput=caseText(); save(); }
     if(!ST.vars[type]){ ST.vars[type]=await makeVariation(type,ST.evalInput); save(); renderEval(); }
     while(doneOf(type)<RUNS_PER_TEST){ $("msg").textContent=T.label+" test: run "+(doneOf(type)+1)+" of "+RUNS_PER_TEST+"…"; await runOnce(type,ST.vars[type]); }
-    $("msg").textContent=T.label+" test done ("+RUNS_PER_TEST+" runs). Code the runs on the last tab."+(allDone()?" All tests are done.":""); }); }
+    $("msg").textContent=T.label+" test done ("+RUNS_PER_TEST+" runs). "+(allDone()?" All tests are done: download the log.":""); }); }
 $("stopBtn").addEventListener("click",()=>{ if(ctl) ctl.abort(); });
 
 /* ---- downloads in the log format ---- */
-const COLS=["run_id","date_time","source","strategy","strategy_version","run_version","input","variation_type","what_changed","extra_prompt","extra_output","repeat_no","models_asked","models_answered","ai_output","ai_outcome","verdict","uncertainty_flagged","fabricated","coder_note","calls","tokens_est","seconds","error"];
+const COLS=["run_id","date_time","source","strategy","strategy_version","run_version","input","variation_type","what_changed","extra_prompt","extra_output","repeat_no","models_asked","models_answered","ai_output","ai_outcome","calls","tokens_est","seconds","error"];
 function csv(){ const q=v=>{ const s=String(v==null?"":v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }; return [COLS.join(",")].concat(ST.log.map(l=>COLS.map(c=>q(l[c])).join(","))).join("\n"); }
 /* the file name tells "sync" where the log belongs: runs-<strategy>.csv / .json, with every run and every test */
 const logName=()=>"runs-"+slug(STRATEGY.strategy);

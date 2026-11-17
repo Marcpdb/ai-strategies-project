@@ -41,11 +41,6 @@ The columns follow the four steps of the AI evaluation.
 
 Comparing strategies or models (CSA): put the CSV files of all dashboards together and compare `ai_outcome` per `variation_type`. Agent interaction (ISIA): read the `steps` in the JSON file: what each box received from the others and what it produced.
 
-## 4. Conclude (code every run)
+## 4. Conclude (coding)
 
-| Column | Meaning |
-|---|---|
-| verdict | the student's coding: correct, partly, wrong, unsure |
-| uncertainty_flagged | yes or no: does the answer say what it does not know? |
-| fabricated | yes or no: does it make up facts that are not in the input? |
-| coder_note | a short note |
+The log has no coding columns. Each run is coded in `findings.md` by the findings step: verdict (correct, partly, wrong, unsure), flags uncertainty (yes/no), makes things up (yes/no), each with a quote from the output. The student checks that coding and can change it there.
