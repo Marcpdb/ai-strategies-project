@@ -31,7 +31,7 @@ Start from `reference/dashboard-template.html`: a finished dashboard for the inv
 3. **Strategy, copied verbatim:** `STRATEGY` from the "Boxes" section, prompts exactly as written; the confirmed mapping in `STEP_OF`; the test cases in `TESTS`. Do not change prompts, models, effort or tools unless the student asks.
 4. **Variation:** `{type:"baseline",what:""}` for the strategy's own dashboard.
 5. Write the page to `<strategy>/dashboard/dashboard.html`.
-6. **Publish** it with the Artifact tool: `capabilities` `{"sample": {}, "downloads": true}`, a short generic `icon`. Write the link to `<strategy>/dashboard/link.md`. To change it later, edit `dashboard.html` and publish again with the link as `url`, so the link stays.
+6. **Publish** it with the Artifact tool: `capabilities` `{"sample": {}, "downloads": true, "db": {"rules": [{"path": "", "read": "view", "write": "owner"}]}}` (`db`: the dashboard saves every run in its own database, and only the student, its owner, writes there), a short generic `icon`. Write the link to `<strategy>/dashboard/link.md`. To change it later, edit `dashboard.html` and publish again with the link as `url`, so the link stays.
 
 ## 4. Hand over
 

@@ -23,12 +23,12 @@ Comparing the strategies with each other (CSA) and the conclusion are in `4-comp
   - what is changed, from what to what, and why;
   - the test cases used;
   - the number of runs per test case, set now (at least 3), and that every run is reported.
-- If the test needs its own dashboard (every folder except 1 and part of 6): copy `../../dashboard/dashboard.html` to `dashboard.html` in this folder, make exactly the one change, set `VARIATION` to `{type:"<type>",what:"<the change in a few words>"}`, publish it as a separate artifact titled "<dashboard name> · <strategy> · <test>", with the same `capabilities` as the strategy's dashboard, and write the link to `link.md` in this folder.
-- Tell the student which link to open, which test cases to run and how many times (use the 3× button). Then they click "Download runs" on the decision tab and type "sync". They do not judge runs in the dashboard: that happens in the findings.
+- If the test needs its own dashboard (every folder except 1 and part of 6): copy `../../dashboard/dashboard.html` to `dashboard.html` in this folder, make exactly the one change, set `VARIATION` to `{type:"<type>",what:"<the change in a few words>"}`, publish it as a separate artifact titled "<dashboard name> · <strategy> · <test>", with the same `capabilities` as the strategy's dashboard (so its runs are saved too), and write the link to `link.md` in this folder.
+- Tell the student which link to open, which test cases to run and how many times (use the 3× button). Every run is saved in the dashboard by itself; when they are done, they type "sync". They do not judge runs in the dashboard: that happens in the findings.
 
 ### 2. Sync (the student says "sync")
 
-The student clicks "Download runs" on the decision tab of the test dashboard (one JSON file); "sync" (main `SKILL.md`) moves them to `logs/` here. For folder 1 the runs come from the strategy's own dashboard and go to `../../dashboard/logs/`.
+Every run is saved in the test dashboard's own database; "sync" (main `SKILL.md`) reads them into `logs/runs.json` here. For folder 1 the runs come from the strategy's own dashboard and go to `../../dashboard/logs/`.
 
 ### 3. Findings (the student says "findings")
 

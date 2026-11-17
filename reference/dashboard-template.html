@@ -257,7 +257,7 @@ function renderPanel(){
   const bind=(id,k,num)=>{ const el=$(id); if(el) el.addEventListener("input",e=>{ ST[k]=num?(+e.target.value||0):e.target.value; ST.tc=-1; renderControls(); save(); }); };
   bind("budget","budget",1); bind("minutes","minutes",1); bind("kitchen","kitchen");
   document.querySelectorAll("[data-review]").forEach(b=>b.onclick=()=>{ ST.review=+b.dataset.review; save(); restore(ST.log[ST.review]); render(); });
-  if($("json")) $("json").onclick=()=>download(logName()+".json",JSON.stringify({strategy:STRATEGY.strategy,version:STRATEGY.version,variation:VARIATION,runs:ST.log.map(l=>{ const r={...l}; delete r.status; delete r.labels; delete r.hot; return r; })},null,2));
+  if($("json")) $("json").onclick=()=>download(logName()+".json",JSON.stringify({strategy:STRATEGY.strategy,version:STRATEGY.version,variation:VARIATION,runs:ST.log.map(clean)},null,2));
 }
 function adviceHtml(){
   const l=ST.review!=null?ST.log[ST.review]:null;
@@ -270,7 +270,7 @@ function logHtml(){
   const stab=Object.entries(groups).map(([k,v])=>{ const c={}; v.forEach(x=>c[x]=(c[x]||0)+1); const [best,n]=Object.entries(c).sort((a,b)=>b[1]-a[1])[0]; return `<li>${esc(k)}: ${n} of ${v.length} runs gave ${esc(best||"no clear outcome")}</li>`; }).join("");
   return `<h3>Run log</h3>${stab?`<ul class="hint" style="margin:6px 0">${stab}</ul>`:""}
     <div class="tablebox"><table><thead><tr><th>Run</th><th>Time</th><th>Test case</th><th>Changed</th><th>AI outcome</th><th></th></tr></thead><tbody>${ST.log.map((l,i)=>`<tr><td>${esc(l.run_id)}</td><td>${esc(new Date(l.date_time).toLocaleString([],{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}))}</td><td>${esc(l.test_case)}</td><td class="cut">${esc(l.what_changed)}</td><td>${esc(l.error?"error":l.ai_outcome)}</td><td><button class="btn sm" type="button" data-review="${i}">${ST.review===i?"Shown":"Show"}</button></td></tr>`).reverse().join("")||`<tr><td colspan="6" class="hint">No runs yet.</td></tr>`}</tbody></table></div>
-    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="json">Download runs</button></div><p class="hint" style="margin-top:6px">The download holds every run so far, with every step. Then type sync in Claude Code.</p>`;
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="json">Download runs</button></div><p class="hint" style="margin-top:6px">${db?"Every run is saved in this dashboard by itself: type sync in Claude Code to get the runs into your folder. "+(ST.log.some(l=>l.saved===false)?"<b>Some runs could not be saved; use Download runs, then sync.</b>":"The download is only a backup."):"Saving runs is not available in this view: click Download runs, then type sync in Claude Code."}</p>`;
 }
 function renderControls(){
   $("tc").innerHTML=TESTS.map((t,i)=>`<option value="${i}" ${ST.tc===i?"selected":""}>${esc(t.name)}</option>`).join("")+`<option value="-1" ${ST.tc===-1?"selected":""}>own input (step 1)</option>`;
@@ -282,7 +282,19 @@ $("times").addEventListener("change",e=>{ ST.times=+e.target.value; save(); });
 function render(){ renderTabs(); renderControls(); renderFlow(); renderPanel(); renderMsgs(); }
 
 /* ---- run: the shared engine, one separate call to Claude per box ---- */
-let sample=null, toolsOK=false;
+let sample=null, toolsOK=false, db=null;
+/* every run is saved in this artifact's own database (collection "runs"); "sync" in Claude Code reads it into logs/runs.json */
+(async()=>{ try{ db=window.claude&&window.claude.use?await window.claude.use("db"):null; }catch(e){ db=null; } if(ST.tab==="decide") renderPanel(); })();
+const clean=l=>{ const r={...l}; delete r.status; delete r.labels; delete r.hot; delete r.saved; return r; };
+async function saveRun(rec){
+  if(!db){ rec.saved=false; return; }
+  let body={...clean(rec),variation:VARIATION};
+  if(JSON.stringify(body).length>240000) body.steps=(body.steps||[]).map(s=>({...s,prompt:"(left out: too long to save)"}));
+  if(JSON.stringify(body).length>240000) body.steps=[];
+  const id=(rec.date_time+"-"+rec.run_id+"-"+Math.random().toString(36).slice(2,6)).replace(/[^A-Za-z0-9_\-.~:@+]/g,"-");
+  try{ await db.collection("runs").doc(id).set(body); rec.saved=true; }
+  catch(e){ if(e&&e.code==="unavailable"){ try{ await new Promise(r=>setTimeout(r,800+Math.random()*800)); await db.collection("runs").doc(id).set(body); rec.saved=true; return; }catch(e2){} } rec.saved=false; }
+}
 (async()=>{ try{ sample=window.claude&&window.claude.use?await window.claude.use("sample"):null; }catch(e){}
   if(sample){ try{ const lim=await sample.limits(); toolsOK=!!(lim&&lim.tools); }catch(e){} } else $("msg").textContent="Open this page in Claude to run the agents.";
   renderControls(); })();
@@ -301,12 +313,13 @@ async function runOnce(){
     ai_output:res?res.output:"",ai_outcome:res?outcomeOf(res.output):"",
     calls:res?res.calls:0,tokens_est:res?res.tokens_est:0,seconds:res?res.seconds:null,error:err?(err.msg||err.code||"failed"):"",
     steps:res?res.steps:live.steps,status:{...status},labels:{...labels},hot:[...hot]};
+  await saveRun(rec);
   ST.log.push(rec); ST.review=ST.log.length-1; live=null; bubbles={}; save();
   if(err) throw err;
 }
 $("runBtn").addEventListener("click",async()=>{
   if(running||!sample) return; running=true; $("msg").classList.remove("err"); $("msg").textContent="Running…"; renderControls();
-  try{ for(let t=0;t<ST.times;t++){ await runOnce(); } $("msg").textContent="Done. The advice and the run log are on step 5."; ST.tab="decide"; }
+  try{ for(let t=0;t<ST.times;t++){ await runOnce(); } $("msg").textContent="Done. The advice and the run log are on step 5."+(db&&ST.log.length&&ST.log[ST.log.length-1].saved?" The runs are saved: type sync in Claude Code.":""); ST.tab="decide"; }
   catch(e){ $("msg").classList.add("err"); $("msg").textContent=e.msg||ERR[e.code]||"Something went wrong. Try again."; }
   running=false; save(); restore(shownRun()); render();
 });

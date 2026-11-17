@@ -7,7 +7,7 @@ Open this folder in the Code tab of the Claude desktop app and type the words in
 3. In the playground, learn the seven strategies. In the Sandbox, change and run the ones you choose for the final decision of your workflow. Click Export: fill in every _(fill in)_ in the file that opens, then click Download.
 4. **sync**: each strategy file goes to the folder of its strategy in `3-strategies/`.
 5. **build the <strategy> dashboard**, for example *build the chain dashboard*. You get an AI version of your dashboard with that strategy.
-6. Evaluate each strategy in its `evaluation/` folder, starting with `1-baseline-stability`: **set up**, run the tests in the dashboard, click **Download runs** on the decision tab, **sync**, **findings**. You only run; the findings skill reads the runs for you.
+6. Evaluate each strategy in its `evaluation/` folder, starting with `1-baseline-stability`: **set up**, run the tests in the dashboard, **sync**, **findings**. You only run; the findings skill reads the runs for you.
 7. Compare the strategies and conclude in `4-compare-and-conclude/`.
 
 Type **status** at any time to see where you are and what comes next.
@@ -18,15 +18,15 @@ This folder fills up with your own work: your dashboard and its data, your strat
 
 ## Downloads and sync
 
-The playground and your dashboards are web pages. They cannot save into this folder, so you download files from them, and they land in your Downloads folder. **sync** moves them from Downloads to the right place in this folder. The file names tell it where:
+The playground and your dashboards are web pages. They cannot save into this folder. **sync** brings what they made to the right place:
 
-| You download | From | sync moves it to |
+| What | From | sync puts it in |
 |---|---|---|
-| `strategy-<name>.md` | Export in the sandbox | `3-strategies/<strategy>/export/strategy.md` |
-| `runs-<strategy>-baseline.json` | your strategy's dashboard | `3-strategies/<strategy>/dashboard/logs/` |
-| `runs-<strategy>-<test>.json` | a test dashboard | `3-strategies/<strategy>/evaluation/<test>/logs/` |
+| `strategy-<name>.md` (you download it) | Export in the sandbox | `3-strategies/<strategy>/export/strategy.md` |
+| your runs (saved by the dashboard itself) | your strategy's dashboard | `3-strategies/<strategy>/dashboard/logs/runs.json` |
+| your runs (saved by the dashboard itself) | a test dashboard | `3-strategies/<strategy>/evaluation/<test>/logs/runs.json` |
 
-A log download always holds every run so far, so download again after new runs, and sync again.
+You never download runs: every run is saved in the dashboard, and sync fetches all of them. ("Download runs" is only a backup; sync picks that file up from Downloads too.)
 
 ## Folders
 

@@ -1,6 +1,6 @@
 # Run log format (the same in every dashboard)
 
-One record per run, written by every dashboard (`source` = dashboard). The dashboard only logs: nobody judges a run in the dashboard; the findings skills read the log afterwards. The download is one file, `runs-<strategy>-<test>.json`; "sync" moves it to the right `logs/` folder as `runs.json`. Every run has the fields below plus `steps`: every step of the run with what went in, what came out, the model asked for, the model that answered, and the time. (The sandbox keeps its last 30 runs with the same fields and steps, and downloads them as JSON.)
+One record per run, written by every dashboard (`source` = dashboard). The dashboard only logs: nobody judges a run in the dashboard; the findings skills read the log afterwards. Every run is saved in the dashboard's own database (collection `runs`, one document per run, with `variation` added); "sync" reads them into the right `logs/` folder as `runs.json`. The "Download runs" button saves the same as `runs-<strategy>-<test>.json`, as a backup. Every run has the fields below plus `steps`: every step of the run with what went in, what came out, the model asked for, the model that answered, and the time. (The sandbox keeps its last 30 runs with the same fields and steps, and downloads them as JSON.)
 
 The columns follow the four steps of the AI evaluation.
 
