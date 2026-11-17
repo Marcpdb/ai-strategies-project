@@ -1,19 +1,18 @@
 ---
 name: routing-baseline-stability
-description: "Evaluation test 'Baseline and stability' for the Routing strategy. Use when the student sets up, syncs or writes findings for this test."
+description: "Evaluation test 'Baseline and stability' for the Routing strategy. Use when the student asks about this test or writes findings for it."
 ---
 
 # Routing · Baseline and stability
 
 **Question.** Document and Compare (TIA): what exactly produced this result, and do repeated runs give the same outcome?
 
-**What changes.** Nothing is changed: this is the baseline every other test is compared with. It uses the strategy's own dashboard (`../../dashboard/`), so there is no separate dashboard here.
+**How it runs.** The **Baseline** button next to Run in the Routing dashboard (`../../dashboard/`), 3 runs. Nothing to set up by hand. `variation_type` in the log: `baseline`.
 
-Follow `reference/evaluation.md` (set up, sync, findings). The variation type in the log is `baseline`. For this test:
+**What changes.** Nothing. The Baseline button runs the strategy as built, 3 times, on the input fixed at the first test run. Every other test is compared with it.
 
-- Check that the test cases in `3-strategies/test-cases.md` include a neutral case, and that the strategy's dashboard is built.
-- The plan: every test case, at least 3 runs each (the 3× button), with "What did you change?" left empty. Write that in `plan.md`, with the date, the strategy version and the models of every box (from the export).
-- After sync, the runs are in `../../dashboard/logs/`: that is where the baseline lives.
-- Findings: per test case, how many runs gave the same outcome (`ai_outcome`), and where they differ. That is the stability (TIA).
+Follow `reference/evaluation.md`. Findings are written only when every test of the Routing dashboard has its 3 runs; then this folder gets `findings.md`, from `../../dashboard/logs/runs.json`. In particular:
 
-The folder ends up with `plan.md` and `findings.md`.
+- Document: the strategy version, the models of every box (asked and answered), the input, and per run the calls, estimated tokens and seconds.
+- Stability: how many of the 3 runs gave the same outcome (`ai_outcome`), and where the outputs differ.
+- Say what the boxes produced, never what they "thought".

@@ -1,18 +1,18 @@
 ---
 name: parallel-vary-wording
-description: "Evaluation test 'Prompt wording' for the Parallel strategy. Use when the student sets up, syncs or writes findings for this test."
+description: "Evaluation test 'Prompt wording' for the Parallel strategy. Use when the student asks about this test or writes findings for it."
 ---
 
 # Parallel · Prompt wording
 
-**Question.** Vary (systematic prompt variation): does changing the order or wording of a prompt change the outcome?
+**Question.** Vary (systematic prompt variation): does changing the order or wording of the prompts change the outcome?
 
-**What changes.** One change: the wording or the order of one prompt. A good first choice for this strategy: the prompt of the aggregator, since it combines all answers. The meaning stays the same; only how it is said, or in which order, changes.
+**How it runs.** The **Wording** button next to Run in the Parallel dashboard (`../../dashboard/`), 3 runs. Nothing to set up by hand. `variation_type` in the log: `wording`.
 
-Follow `reference/evaluation.md` (set up, sync, findings). The variation type in the log is `wording`. For this test:
+**What changes.** One extra call rewords every prompt of the strategy, with the same meaning, the same placeholders and the same `Advice:` line. The reworded prompts are the same in all 3 runs. The student can edit the extra prompt before the first run.
 
-- Ask the student which box and what new wording or order. Show the old and new prompt side by side before you build.
-- Build the test dashboard with only that prompt changed. Same test cases, same number of runs as the baseline.
-- Findings: per test case, the outcomes with the new wording next to the baseline.
+Follow `reference/evaluation.md`. Findings are written only when every test of the Parallel dashboard has its 3 runs; then this folder gets `findings.md`, from `../../dashboard/logs/runs.json`. In particular:
 
-The folder ends up with `plan.md`, `dashboard.html`, `link.md`, `logs/` and `findings.md`.
+- Show one old and one new prompt side by side (from `extra_output`), so the reader sees what the change was.
+- The outcomes of the 3 runs next to the 3 baseline runs: did the outcome change?
+- Say what the boxes produced, never what they "thought".

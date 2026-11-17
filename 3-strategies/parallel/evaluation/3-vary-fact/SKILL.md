@@ -1,18 +1,18 @@
 ---
 name: parallel-vary-fact
-description: "Evaluation test 'Decisive fact' for the Parallel strategy. Use when the student sets up, syncs or writes findings for this test."
+description: "Evaluation test 'Decisive fact' for the Parallel strategy. Use when the student asks about this test or writes findings for it."
 ---
 
 # Parallel · Decisive fact
 
 **Question.** Vary (counterfactual prompting): does changing one decisive fact in the input change the outcome?
 
-**What changes.** One change: one fact in one test case that should decide the outcome (a budget, a size, a date, a requirement). The prompts stay as they are.
+**How it runs.** The **Fact** button next to Run in the Parallel dashboard (`../../dashboard/`), 3 runs. Nothing to set up by hand. `variation_type` in the log: `fact`.
 
-Follow `reference/evaluation.md` (set up, sync, findings). The variation type in the log is `fact`. For this test:
+**What changes.** One extra call changes one fact in the input that should change the advice (a budget, a size, a date, a requirement). The prompts stay as they are. The same changed input is used in all 3 runs.
 
-- Ask the student which test case and which fact, and what outcome they expect when it changes. Write the expectation in `plan.md` before any run.
-- Build the test dashboard with one extra test case: the original case with that one fact changed, named "<case> (changed: <fact>)". Run it as often as the baseline.
-- Findings: did the outcome change the way the student expected? Compare with the baseline runs of the original case.
+Follow `reference/evaluation.md`. Findings are written only when every test of the Parallel dashboard has its 3 runs; then this folder gets `findings.md`, from `../../dashboard/logs/runs.json`. In particular:
 
-The folder ends up with `plan.md`, `dashboard.html`, `link.md`, `logs/` and `findings.md`.
+- The changed fact, from what to what (`what_changed`).
+- The outcomes of the 3 runs next to the 3 baseline runs: did the outcome change, and does the output mention the changed fact? Ask the student whether this is the change they would expect.
+- Say what the boxes produced, never what they "thought".
