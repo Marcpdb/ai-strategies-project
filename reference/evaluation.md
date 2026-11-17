@@ -15,7 +15,7 @@ Comparing the strategies with each other (CSA) and the conclusion are in `4-comp
 
 ## Every test, for every strategy
 
-Each of the student's 3 strategies goes through **every** test folder: 1 to 5, and 6 for the strategies with more than one LLM box (single call has no folder 6). Start with `1-baseline-stability`: every other test is compared with it. The final comparison in `4-compare-and-conclude/` puts the three strategies side by side, test by test, so a missing test leaves a hole in it.
+The student chooses 3 of the 7 strategies. Only those 3 are evaluated; the folders of the other strategies stay untouched. Each of the 3 goes through **every** test folder: 1 to 5, and 6 for the strategies with more than one LLM box (single call has no folder 6). Start with `1-baseline-stability`: every other test is compared with it. The final comparison in `4-compare-and-conclude/` puts the three strategies side by side, test by test, so a missing test leaves a hole in it.
 
 **The same change for the three strategies.** A test compares strategies only when they got the same change. At set up, read the `plan.md` of the same test in the other strategies first. If one exists, propose that change again:
 

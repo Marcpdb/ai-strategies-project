@@ -64,11 +64,11 @@ A short list:
 - `2-manual-dashboard/dashboard.html`: yes or no;
 - `3-strategies/test-cases.md`: how many test cases;
 - per strategy that has an export: export filled in (any _(fill in)_ left?), dashboard link, runs at the last sync;
-- the evaluation, as one table: the strategies as rows, the tests (1 to 6) as columns, and in each cell `plan`, `runs` (how many), `findings`, or `-` (not started). Folder 6 is `n/a` for single call. Every strategy does every test (`reference/evaluation.md`);
+- the evaluation, as one table: the strategies as rows, the tests (1 to 6) as columns, and in each cell `plan`, `runs` (how many), `findings`, or `-` (not started). Folder 6 is `n/a` for single call. Each of the student's 3 chosen strategies does every test (`reference/evaluation.md`);
 - `4-compare-and-conclude/`: `comparison.md` and `conclusion.md`, yes or no;
 - the next step.
 
-Strategies without an export are not listed: the student chose others.
+Strategies without an export are not listed: the student chose others. The student chooses exactly 3: with fewer, say how many are still missing; with more, ask which 3 they keep for the evaluation.
 
 ## Rules
 

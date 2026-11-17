@@ -7,7 +7,7 @@ Open this folder in the Code tab of the Claude desktop app and type the words in
 3. In the playground, learn the seven strategies. In the Sandbox, change and run the ones you choose for the final decision of your workflow. Click Export: fill in every _(fill in)_ in the file that opens, then click Download.
 4. **sync**: each strategy file goes to the folder of its strategy in `3-strategies/`.
 5. **build the <strategy> dashboard**, for example *build the chain dashboard*. You get an AI version of your dashboard with that strategy.
-6. Evaluate each of your 3 strategies on **every** test in its `evaluation/` folder (1 to 5, and 6 for strategies with more than one LLM box), starting with `1-baseline-stability`: **set up**, run the tests in the dashboard, **sync**, **findings**. You only run; the findings skill reads the runs for you. Give the three strategies the same change in each test, so they can be compared.
+6. Evaluate only the 3 strategies you chose (the other strategy folders stay empty), each on **every** test in its `evaluation/` folder (1 to 5, and 6 for strategies with more than one LLM box), starting with `1-baseline-stability`: **set up**, run the tests in the dashboard, **sync**, **findings**. You only run; the findings skill reads the runs for you. Give the three strategies the same change in each test, so they can be compared.
 7. **compare**: the three strategies side by side, test by test. **conclude**: where each strategy holds up and where it breaks, and which one you would use for your workflow. Both in `4-compare-and-conclude/`.
 8. Hand in: a .zip of this whole folder.
 
