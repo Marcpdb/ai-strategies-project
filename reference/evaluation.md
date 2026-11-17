@@ -17,7 +17,7 @@ Comparing the strategies with each other (CSA) and the conclusion are in `4-comp
 
 ## 1. Run (in the dashboard)
 
-The student picks each test in the dropdown, may open the line under it to read or change the extra prompt (before the first run of that test), and clicks **Run test**. Each test runs 3 times. The advice of the run shown is under the flow. When every test has 3 runs, the dashboard says so. They click **Download log** (CSV and JSON) and type "sync": the files go to `../../dashboard/logs/` as `runs.csv` and `runs.json`. Nothing is coded in the dashboard: the findings do that.
+The student picks each test in the dropdown, may open the line under it to read or change the extra prompt (before the first run of that test), and clicks **Run test**. Each test runs 3 times. The advice of the run shown is under the flow. When every test has 3 runs, the dashboard says so. After each test, the dashboard downloads the log by itself (CSV and JSON, every run so far; **Download log** does the same by hand). The student types "sync": the files go to `../../dashboard/logs/` as `runs.csv` and `runs.json`. Nothing is coded in the dashboard: the findings do that.
 
 ## 2. Findings (the student says "findings")
 

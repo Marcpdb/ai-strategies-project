@@ -1,6 +1,6 @@
 # Run log format (the same in every dashboard)
 
-One row per run. Every dashboard writes it, so the CSV files of all strategies can be put together in one sheet. The two downloads are named `runs-<strategy>.csv` and `.json` and hold every run of that dashboard: free runs and every evaluation test. "sync" moves them to `3-strategies/<strategy>/dashboard/logs/` as `runs.csv` and `runs.json`.
+One row per run. Every dashboard writes it, so the CSV files of all strategies can be put together in one sheet. The dashboard downloads them automatically after each test (and with **Download log**). The two downloads are named `runs-<strategy>.csv` and `.json` and hold every run of that dashboard: free runs and every evaluation test. "sync" moves them to `3-strategies/<strategy>/dashboard/logs/` as `runs.csv` and `runs.json`.
 
 The JSON download has the same fields per run plus `steps` (every step: what went in, the full prompt, what came out, the model asked for, the model that answered, the time), and at the top: `tests` (the tests of this dashboard), `runs_per_test` (3), `evaluation_input` (the input fixed at the first test run) and `variations` (per test, the change that was made).
 
