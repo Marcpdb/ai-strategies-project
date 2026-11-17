@@ -11,12 +11,12 @@ Two parts. Both work only from the logs and findings in `3-strategies/`; run "sy
 
 How do the strategies differ on the same cases?
 
-- Take the baseline runs of every strategy that has them: `3-strategies/<strategy>/dashboard/logs/runs.csv`. Put them together in `all-baseline-runs.csv` here (same columns; the `strategy` column tells them apart).
+- Take the baseline runs of every strategy that has them: `3-strategies/<strategy>/dashboard/logs/runs.json`. Put them together in `all-baseline-runs.csv` here, one row per run with the columns of `reference/log-format.md` (without `steps`; the `strategy` column tells them apart).
 - Check that the strategies used the same test cases with the same input (`test_case`, `input`). If not, say which differ: those cannot be compared.
 - Write `comparison.md`:
-  - one table per test case: strategies as rows; the outcomes of the runs, how many runs gave the same outcome, the student's verdicts;
+  - one table per test case: strategies as rows; the outcomes of the runs, and how many runs gave the same outcome;
   - per strategy: calls, estimated tokens and seconds per run (averages over the runs), and the models that actually answered;
-  - what is missing: strategies with fewer runs than planned, uncoded runs.
+  - what is missing: strategies with fewer runs than planned, runs with an error.
   Say only what the logs show.
 
 ## 2. Conclude: "conclude"

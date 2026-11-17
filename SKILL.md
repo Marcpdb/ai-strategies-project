@@ -33,7 +33,8 @@ Never change or delete what the student made: `2-manual-dashboard/`, filled-in `
 
    Write the link to `1-playground/link.md`.
 2. **Check** as under "status", and say what is missing.
-3. Tell the student the next step in one or two lines: learn the seven strategies in the Playground tab; in the Sandbox load, change and run the ones they choose for the final decision of their workflow; export each one, fill in every _(fill in)_ in the file that opens, click Download, and type "sync".
+3. **Privacy**, once: tell the student in one line that this folder and their dashboards hold their own work and stay private: on their computer or in a private repository, never on a public GitHub repository.
+4. Tell the student the next step in one or two lines: learn the seven strategies in the Playground tab; in the Sandbox load, change and run the ones they choose for the final decision of their workflow; export each one, fill in every _(fill in)_ in the file that opens, click Download, and type "sync".
 
 ## The manual dashboard
 
@@ -50,8 +51,8 @@ Read the other files only as background (what the data mean), and never change t
 The playground and the dashboards are web pages: they cannot write into this folder. The student downloads files from them (the browser puts them in the Downloads folder), and "sync" moves them here. Look in `~/Downloads` for the files below, take the newest of each name (the browser adds " (1)", " (2)" to repeated downloads), move it, and remove the older copies of that name from Downloads. Then say in a few lines what moved where, and what is still missing.
 
 1. **Strategy files** `strategy-<name>.md` (from Export in the sandbox). The folder follows from the line "Based on: <strategy>." in the file: Single call → `single-call`, Chain → `chain`, Routing → `routing`, Parallel → `parallel`, Orchestrator → `orchestrator`, Critic → `critic`, Debate → `debate`. No such line (the sandbox started empty): ask the student which strategy it is. Move it to `3-strategies/<folder>/export/strategy.md`. If that file exists and is different, do not overwrite it: ask the student which one to keep, and show which lines differ. Two new files for one strategy: ask which one.
-2. **Run logs** `runs-<strategy>-<test>.csv` and `.json` (from the two download buttons in a dashboard). `<test>` is `baseline` for the strategy's own dashboard, and otherwise the test: `wording` → `evaluation/2-vary-wording/`, `fact` → `3-vary-fact/`, `boundary` → `4-vary-boundary/`, `model` → `5-compare-models/`, `agents` → `6-compare-agents/`. Baseline logs go to `3-strategies/<strategy>/dashboard/logs/`, test logs to `3-strategies/<strategy>/evaluation/<test folder>/logs/`, as `runs.csv` and `runs.json`. A newer download replaces the older one: the dashboard always downloads every run so far.
-3. **Missing:** a dashboard with a link but no log yet, or a log whose newest run is older than the student's last session. Remind them to download both files from the decision tab of that dashboard.
+2. **Run logs** `runs-<strategy>-<test>.json` (from "Download runs" in a dashboard). `<test>` is `baseline` for the strategy's own dashboard, and otherwise the test: `wording` → `evaluation/2-vary-wording/`, `fact` → `3-vary-fact/`, `boundary` → `4-vary-boundary/`, `model` → `5-compare-models/`, `agents` → `6-compare-agents/`. Baseline logs go to `3-strategies/<strategy>/dashboard/logs/`, test logs to `3-strategies/<strategy>/evaluation/<test folder>/logs/`, as `runs.json`. A newer download replaces the older one: the dashboard always downloads every run so far.
+3. **Missing:** a dashboard with a link but no log yet, or a log whose newest run is older than the student's last session. Remind them to click "Download runs" on the decision tab of that dashboard.
 4. **Next step.** For each strategy with a new strategy file: the strategy's `SKILL.md` builds its dashboard next ("build the parallel dashboard").
 
 ## "status"
@@ -69,6 +70,14 @@ Strategies without an export are not listed: the student chose others.
 ## Rules
 
 - Plain English, short. Never invent results, test cases or answers.
-- The human decides last: the student accepts or overrides every advice and codes every run. Do not code runs.
+- The AI only advises. The dashboards only log runs: the student runs, and the findings skill reads the logs. The student writes every conclusion; findings say only what the logs show, with quotes the student can check.
 - No anthropomorphism ("the agents debated" does not mean they reasoned).
 - Dashboards are shared directly with the people who need to see them, not as a public link.
+
+## Privacy
+
+This folder holds the student's own work: their dashboard and data, strategy files, logs, findings. It stays private.
+
+- Never push this folder to a public repository, never make a public repository or fork of it, even when asked. Push only when the student asks, and only to a repository you have checked is private (for example `gh repo view --json visibility`); if you cannot check, do not push. If the student wants a backup on GitHub, they make a **private** repository for it. If `git remote -v` shows a public repository of the student's own, warn them.
+- Every page you publish (playground, dashboards) stays private: never make it public or share it by link. The student shares it themselves, directly with the people who need to see it.
+- Test cases are invented; no real personal data in this folder.

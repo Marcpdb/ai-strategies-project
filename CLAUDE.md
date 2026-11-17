@@ -7,4 +7,6 @@ This folder is a student's project on AI strategies and AI evaluation. Every fol
 - When the student works on a test ("set up the wording test for chain", or is inside an evaluation folder), read that folder's `SKILL.md` and follow it, together with `reference/evaluation.md`.
 - For comparing strategies or the conclusion, read `4-compare-and-conclude/SKILL.md`.
 
+The student's work stays private: never push this folder to a public repository, never create a public repository or fork of it, and keep every published page private (see "Privacy" in `SKILL.md`).
+
 If it is unclear which strategy or test the student means, ask. Write in plain English and keep answers short.

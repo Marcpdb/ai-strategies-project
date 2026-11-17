@@ -13,6 +13,6 @@ Follow `reference/evaluation.md` (set up, sync, findings). The variation type in
 
 - Ask the student which information to remove or make conflicting, in one test case. Write it in `plan.md`.
 - Build the test dashboard with that one extra test case, named "<case> (missing: ...)" or "<case> (conflict: ...)". Run it as often as the baseline.
-- The student's coding matters most here: "flags uncertainty" and "makes things up". Findings: count both per run, and quote the sentence of the output that shows it, word for word.
+- The two readings matter most here: "flags uncertainty" and "adds facts" (see `reference/evaluation.md`). Findings: count both per run, and quote the sentence of the output that shows it, word for word.
 
 The folder ends up with `plan.md`, `dashboard.html`, `link.md`, `logs/` and `findings.md`.

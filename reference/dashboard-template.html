@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a student's workflow dashboard (example: planning dinner for guests with different diets) (one tab per step) as a separate agentic version for ONE strategy. Under the tabs: the AI flow (In to Out, live). Left: the tab, with the agent that works on this step on top and the original content below. Right: the agents' conversation, every step with what went in and what came out. The last tab: the advice, accept or override, and the run log for the evaluation. */
+/* Layout: a student's workflow dashboard (example: planning dinner for guests with different diets) (one tab per step) as a separate agentic version for ONE strategy. Under the tabs: the AI flow (In to Out, live). Left: the tab, with the agent that works on this step on top and the original content below. Right: the agents' conversation, every step with what went in and what came out. The last tab: the advice and the run log. Runs are only logged here; the evaluation skills read the log afterwards. */
 :root{
   --page:#f0eee6; --card:#ffffff; --ink:#1f1e1b; --muted:#6f6c64; --line:#e3e0d6;
   --green-fill:#eef4e7; --green-line:#b7d29c; --green-ink:#5b8a30;
@@ -89,9 +89,7 @@ td.num{font-family:var(--f-mono);text-align:right} td.cut{max-width:260px;overfl
 
 .rec{border:2px solid var(--live);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
 .rec .big{font-size:22px;font-weight:700}
-.gate{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
 .pill{background:var(--green-fill);color:var(--green-ink);border-radius:999px;padding:3px 10px;font-weight:600;font-size:13px}
-.coding{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px} @media (max-width:640px){.coding{grid-template-columns:1fr 1fr}}
 h3{margin:18px 0 6px;font-size:14px}
 </style>
 
@@ -106,7 +104,6 @@ h3{margin:18px 0 6px;font-size:14px}
     <div class="top"><h2>AI flow · __STRAT_NAME__ · from In to Out</h2>
       <div class="ctl">
         <label class="f"><span>Test case</span><select id="tc"></select></label>
-        <label class="f"><span>What did you change?</span><input type="text" id="rchange" placeholder="e.g. Ben: Haiku → Sonnet" size="20"></label>
         <label class="f"><span>Runs</span><select id="times"><option value="1">1×</option><option value="3">3×</option></select></label>
         <button class="btn run" type="button" id="runBtn">Run</button><button class="btn" type="button" id="stopBtn" hidden>Stop</button>
       </div></div>
@@ -177,7 +174,7 @@ function caseText(){ return "What do we cook tonight? Four friends come for dinn
 /* the test this dashboard is for: baseline, or one variation (set by the evaluation skill) */
 const VARIATION=/*__VARIATION__*/{type:"baseline",what:""};
 const KEY="ai-dash-"+STRATEGY.version;
-const ST={tab:"guests",tc:0,budget:30,minutes:45,kitchen:TESTS[0].kitchen,rchange:"",times:1,log:[],review:null,seq:0};
+const ST={tab:"guests",tc:0,budget:30,minutes:45,kitchen:TESTS[0].kitchen,times:1,log:[],review:null,seq:0};
 try{ Object.assign(ST,JSON.parse(localStorage.getItem(KEY)||"{}")); }catch(e){}
 const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(ST)); }catch(e){} };
 
@@ -259,39 +256,28 @@ function renderPanel(){
   $("panel").innerHTML=h;
   const bind=(id,k,num)=>{ const el=$(id); if(el) el.addEventListener("input",e=>{ ST[k]=num?(+e.target.value||0):e.target.value; ST.tc=-1; renderControls(); save(); }); };
   bind("budget","budget",1); bind("minutes","minutes",1); bind("kitchen","kitchen");
-  if($("acc")) $("acc").onclick=()=>verdict("accepted","","");
-  if($("ovrBtn")) $("ovrBtn").onclick=()=>{ const o=$("ovr").value; if(!o){ $("ovr").focus(); return; } verdict("overridden",o,$("why").value); };
   document.querySelectorAll("[data-review]").forEach(b=>b.onclick=()=>{ ST.review=+b.dataset.review; save(); restore(ST.log[ST.review]); render(); });
-  document.querySelectorAll("[data-code]").forEach(el=>el.addEventListener("change",()=>{ const l=ST.log[ST.review]; if(l){ l[el.dataset.code]=el.value; save(); if(el.tagName==="SELECT") renderPanel(); } }));
-  if($("csv")) $("csv").onclick=()=>download(logName()+".csv",csv());
   if($("json")) $("json").onclick=()=>download(logName()+".json",JSON.stringify({strategy:STRATEGY.strategy,version:STRATEGY.version,variation:VARIATION,runs:ST.log.map(l=>{ const r={...l}; delete r.status; delete r.labels; delete r.hot; return r; })},null,2));
 }
 function adviceHtml(){
   const l=ST.review!=null?ST.log[ST.review]:null;
   if(!l) return `<div class="rec"><span class="hint">No advice yet. Press Run.</span></div>`;
   return `<div class="rec"><span class="hint">AI advice · run ${esc(l.run_id)} · ${esc(l.test_case)}</span><span class="big">${esc(l.ai_outcome||"(no clear outcome)")}</span><div style="white-space:pre-wrap">${esc(l.error||l.ai_output)}</div>
-    <div class="gate">${l.user_choice?`<span class="pill">${esc(l.user_choice+(l.override_to?": "+l.override_to:"")+(l.override_reason?" ("+l.override_reason+")":""))}</span>`:`<button class="btn" type="button" id="acc">Accept</button>
-      <label class="f"><span>Or choose instead</span><select id="ovr"><option value="">-</option>${DISHES.map(d=>`<option>${esc(d.name)}</option>`).join("")}</select></label>
-      <label class="f" style="flex:1"><span>Why</span><input type="text" id="why" placeholder="reason for overriding"></label><button class="btn" type="button" id="ovrBtn">Override</button>`}</div>
-    <div class="coding">${codeSel("verdict","Verdict (your coding)",[["","-"],["correct","correct"],["partly","partly correct"],["wrong","wrong"],["unsure","cannot judge"]],l)}${codeSel("uncertainty_flagged","Flags uncertainty?",[["",""],["yes","yes"],["no","no"]],l)}${codeSel("fabricated","Makes things up?",[["",""],["yes","yes"],["no","no"]],l)}
-      <label class="f"><span>Note</span><input type="text" data-code="coder_note" value="${esc(l.coder_note)}"></label></div></div>`;
+</div>`;
 }
-const codeSel=(k,t,opts,l)=>`<label class="f"><span>${t}</span><select data-code="${k}">${opts.map(([v,x])=>`<option value="${v}" ${l[k]===v?"selected":""}>${x}</option>`).join("")}</select></label>`;
 function logHtml(){
   const groups={}; ST.log.forEach(l=>{ if(l.error) return; const k=l.test_case+" | version "+l.strategy_version; (groups[k] ||= []).push(l.ai_outcome); });
   const stab=Object.entries(groups).map(([k,v])=>{ const c={}; v.forEach(x=>c[x]=(c[x]||0)+1); const [best,n]=Object.entries(c).sort((a,b)=>b[1]-a[1])[0]; return `<li>${esc(k)}: ${n} of ${v.length} runs gave ${esc(best||"no clear outcome")}</li>`; }).join("");
   return `<h3>Run log</h3>${stab?`<ul class="hint" style="margin:6px 0">${stab}</ul>`:""}
-    <div class="tablebox"><table><thead><tr><th>Run</th><th>Time</th><th>Test case</th><th>Changed</th><th>AI outcome</th><th>Your choice</th><th>Verdict</th><th></th></tr></thead><tbody>${ST.log.map((l,i)=>`<tr><td>${esc(l.run_id)}</td><td>${esc(new Date(l.date_time).toLocaleString([],{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}))}</td><td>${esc(l.test_case)}</td><td class="cut">${esc(l.what_changed)}</td><td>${esc(l.error?"error":l.ai_outcome)}</td><td>${esc(l.user_choice?(l.user_choice+(l.override_to?": "+l.override_to:"")):"open")}</td><td>${esc(l.verdict||"-")}</td><td><button class="btn sm" type="button" data-review="${i}">${ST.review===i?"Shown":"Show"}</button></td></tr>`).reverse().join("")||`<tr><td colspan="8" class="hint">No runs yet.</td></tr>`}</tbody></table></div>
-    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="csv">Download log (CSV)</button><button class="btn sm" type="button" id="json">Download log with all steps (JSON)</button></div>`;
+    <div class="tablebox"><table><thead><tr><th>Run</th><th>Time</th><th>Test case</th><th>Changed</th><th>AI outcome</th><th></th></tr></thead><tbody>${ST.log.map((l,i)=>`<tr><td>${esc(l.run_id)}</td><td>${esc(new Date(l.date_time).toLocaleString([],{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}))}</td><td>${esc(l.test_case)}</td><td class="cut">${esc(l.what_changed)}</td><td>${esc(l.error?"error":l.ai_outcome)}</td><td><button class="btn sm" type="button" data-review="${i}">${ST.review===i?"Shown":"Show"}</button></td></tr>`).reverse().join("")||`<tr><td colspan="6" class="hint">No runs yet.</td></tr>`}</tbody></table></div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="json">Download runs</button></div><p class="hint" style="margin-top:6px">The download holds every run so far, with every step. Then type sync in Claude Code.</p>`;
 }
-function verdict(c,to,why){ const l=ST.log[ST.review]; if(!l) return; Object.assign(l,{user_choice:c,override_to:to,override_reason:why}); save(); renderPanel(); }
 function renderControls(){
   $("tc").innerHTML=TESTS.map((t,i)=>`<option value="${i}" ${ST.tc===i?"selected":""}>${esc(t.name)}</option>`).join("")+`<option value="-1" ${ST.tc===-1?"selected":""}>own input (step 1)</option>`;
-  $("rchange").value=ST.rchange||""; $("times").value=String(ST.times);
+  $("times").value=String(ST.times);
   $("runBtn").disabled=running||!sample; $("stopBtn").hidden=!running;
 }
 $("tc").addEventListener("change",e=>{ ST.tc=+e.target.value; if(ST.tc>=0) Object.assign(ST,{budget:TESTS[ST.tc].budget,minutes:TESTS[ST.tc].minutes,kitchen:TESTS[ST.tc].kitchen}); save(); render(); });
-$("rchange").addEventListener("input",e=>{ ST.rchange=e.target.value; save(); });
 $("times").addEventListener("change",e=>{ ST.times=+e.target.value; save(); });
 function render(){ renderTabs(); renderControls(); renderFlow(); renderPanel(); renderMsgs(); }
 
@@ -311,8 +297,8 @@ async function runOnce(){
   try{ res=await ENGINE.run(G,{sample,toolsOK,input,knowledge:STRATEGY.knowledge||"",memory:ST.memory||(ST.memory=[]),onMemory:save,signal:ctl.signal,hooks}); }catch(e){ err=e; }
   ST.seq++; const same=ST.log.filter(l=>l.strategy_version===STRATEGY.version&&l.input===input&&!l.error).length;
   const rec={run_id:"D"+String(ST.seq).padStart(3,"0"),date_time:new Date().toISOString(),source:"dashboard",strategy:STRATEGY.strategy,strategy_version:STRATEGY.version,test_case:tcName(),input,
-    variation_type:VARIATION.type,what_changed:ST.rchange||VARIATION.what,repeat_no:same+1,models_asked:res?res.models_asked.join("; "):"",models_answered:res?res.models_answered.join("; "):"",
-    ai_output:res?res.output:"",ai_outcome:res?outcomeOf(res.output):"",user_choice:"",override_to:"",override_reason:"",verdict:"",uncertainty_flagged:"",fabricated:"",coder_note:"",
+    variation_type:VARIATION.type,what_changed:VARIATION.what,repeat_no:same+1,models_asked:res?res.models_asked.join("; "):"",models_answered:res?res.models_answered.join("; "):"",
+    ai_output:res?res.output:"",ai_outcome:res?outcomeOf(res.output):"",
     calls:res?res.calls:0,tokens_est:res?res.tokens_est:0,seconds:res?res.seconds:null,error:err?(err.msg||err.code||"failed"):"",
     steps:res?res.steps:live.steps,status:{...status},labels:{...labels},hot:[...hot]};
   ST.log.push(rec); ST.review=ST.log.length-1; live=null; bubbles={}; save();
@@ -320,16 +306,14 @@ async function runOnce(){
 }
 $("runBtn").addEventListener("click",async()=>{
   if(running||!sample) return; running=true; $("msg").classList.remove("err"); $("msg").textContent="Running…"; renderControls();
-  try{ for(let t=0;t<ST.times;t++){ await runOnce(); } $("msg").textContent="Done. Go to step 5 to accept or override the advice."; ST.tab="decide"; }
+  try{ for(let t=0;t<ST.times;t++){ await runOnce(); } $("msg").textContent="Done. The advice and the run log are on step 5."; ST.tab="decide"; }
   catch(e){ $("msg").classList.add("err"); $("msg").textContent=e.msg||ERR[e.code]||"Something went wrong. Try again."; }
   running=false; save(); restore(shownRun()); render();
 });
 $("stopBtn").addEventListener("click",()=>{ if(ctl) ctl.abort(); });
 
-/* ---- downloads in the log format ---- */
-const COLS=["run_id","date_time","source","strategy","strategy_version","test_case","input","variation_type","what_changed","repeat_no","models_asked","models_answered","ai_output","ai_outcome","user_choice","override_to","override_reason","verdict","uncertainty_flagged","fabricated","coder_note","calls","tokens_est","seconds","error"];
-function csv(){ const q=v=>{ const s=String(v==null?"":v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }; return [COLS.join(",")].concat(ST.log.map(l=>COLS.map(c=>q(l[c])).join(","))).join("\n"); }
-/* the file name tells "sync" where the log belongs: runs-<strategy>-<test>.csv / .json */
+/* ---- download: one JSON file in the log format ---- */
+/* the file name tells "sync" where the log belongs: runs-<strategy>-<test>.json */
 const logName=()=>"runs-"+slug(STRATEGY.strategy)+"-"+slug(VARIATION.type||"baseline");
 const slug=s=>String(s||"strategy").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 async function download(name,data){ try{ const dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null; if(dl){ await dl.save({filename:name,data}); $("msg").textContent="Saved "+name+"."; return; } }catch(e){ if(e&&e.code){ $("msg").textContent="Not saved."; return; } }

@@ -24,20 +24,23 @@ Comparing the strategies with each other (CSA) and the conclusion are in `4-comp
   - the test cases used;
   - the number of runs per test case, set now (at least 3), and that every run is reported.
 - If the test needs its own dashboard (every folder except 1 and part of 6): copy `../../dashboard/dashboard.html` to `dashboard.html` in this folder, make exactly the one change, set `VARIATION` to `{type:"<type>",what:"<the change in a few words>"}`, publish it as a separate artifact titled "<dashboard name> · <strategy> · <test>", with the same `capabilities` as the strategy's dashboard, and write the link to `link.md` in this folder.
-- Tell the student which link to open, which test cases to run and how many times (use the 3× button), and that they accept or override and code every run (verdict, flags uncertainty, makes things up). Then they download both log files and type "sync".
+- Tell the student which link to open, which test cases to run and how many times (use the 3× button). Then they click "Download runs" on the decision tab and type "sync". They do not judge runs in the dashboard: that happens in the findings.
 
 ### 2. Sync (the student says "sync")
 
-The student downloads both log files (CSV and JSON) from the decision tab of the test dashboard; "sync" (main `SKILL.md`) moves them to `logs/` here. For folder 1 the runs come from the strategy's own dashboard and go to `../../dashboard/logs/`.
+The student clicks "Download runs" on the decision tab of the test dashboard (one JSON file); "sync" (main `SKILL.md`) moves them to `logs/` here. For folder 1 the runs come from the strategy's own dashboard and go to `../../dashboard/logs/`.
 
 ### 3. Findings (the student says "findings")
 
 Write `findings.md` from the logs, in plain English, short:
 
 - **What was tested:** copied from `plan.md`, with the dates and the models that actually answered.
-- **Runs:** a table per test case: run, outcome (`ai_outcome`), the student's coding (verdict, uncertainty flagged, fabricated).
+- **Runs:** a table per test case: run, outcome (`ai_outcome`), and two readings of the output (`ai_output`, and the `steps` where it matters):
+  - **flags uncertainty:** yes or no: does the output say what it does not know, or what is missing? Quote the sentence word for word.
+  - **adds facts:** yes or no: does the output state facts, numbers or rules that are not in the input (`input`)? Quote them word for word, and say that they are not in the input.
+  These readings are yours, not the student's: label the columns "read by Claude", and keep the quotes so the student can check every one.
 - **Compared with the baseline:** the same table from `../../dashboard/logs/` (the baseline runs) next to it. Say only what the logs show: how many runs gave the same outcome, where the outcome changed.
-- **Open:** runs that are not coded yet, runs with an error, fewer runs than planned. Ask the student to finish them; do not code runs yourself.
+- **Open:** runs with an error, fewer runs than planned. Ask the student to run them.
 - **The student's conclusion:** an empty section with the folder's question. The student writes it; offer to help them phrase it, never write it for them.
 
 ## Rules

@@ -24,7 +24,7 @@ Show the student one short mapping and wait for their yes:
 
 ## 3. Build
 
-Start from `reference/dashboard-template.html`: a finished dashboard for the invented dinner example, with the placeholders `/*__ENGINE__*/`, `/*__STRATEGY_JSON__*/`, `/*__STEP_OF__*/` and `/*__VARIATION__*/`. Replace its dinner content (title, tabs, data, `caseText()`, `TESTS`, how the outcome is read) with the student's dashboard. Keep everything else: the flow, the agent cards, the conversation, the run controls, the decision tab and the run log with its two downloads (their file names tell "sync" where the log belongs).
+Start from `reference/dashboard-template.html`: a finished dashboard for the invented dinner example, with the placeholders `/*__ENGINE__*/`, `/*__STRATEGY_JSON__*/`, `/*__STEP_OF__*/` and `/*__VARIATION__*/`. Replace its dinner content (title, tabs, data, `caseText()`, `TESTS`, how the outcome is read) with the student's dashboard. Keep everything else: the flow, the agent cards, the conversation, the run controls, the decision tab with the advice, and the run log with its download (its file name tells "sync" where the log belongs). Add no buttons or inputs for judging runs: the dashboard only logs.
 
 1. **Title:** "<dashboard name> · <strategy name>". Keep the student's tabs, data and content.
 2. **Engine, copied verbatim:** the block from `/* ===== ENGINE START` to `/* ENGINE END */` out of `1-playground/playground.html`. Do not write your own strategy logic.
@@ -35,7 +35,7 @@ Start from `reference/dashboard-template.html`: a finished dashboard for the inv
 
 ## 4. Hand over
 
-Check the page once for errors. Then tell the student in a few lines: the link, the mapping you used, what came from their file and what you added, and the next step: the evaluation, starting with `evaluation/1-baseline-stability`. Remind them to share the dashboard directly with the people who need to see it, not as a public link.
+Check the page once for errors. Then tell the student in a few lines: the link, the mapping you used, what came from their file and what you added, and the next step: the evaluation, starting with `evaluation/1-baseline-stability`. Remind them that the dashboard is private: they share it directly with the people who need to see it, never as a public link, and it never goes to a public GitHub repository.
 
 ## Rules
 
