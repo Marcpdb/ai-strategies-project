@@ -1,0 +1,578 @@
+<title>AI Strategy Playground</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a toggle between Playground (seven strategies on one example: what to cook tonight) and Sandbox (load, change, run, export). One diagram, one side panel for the clicked box, one bar with the runs. */
+:root{
+  --page:#f0eee6; --card:#ffffff; --ink:#1f1e1b; --muted:#6f6c64; --line:#e3e0d6;
+  --green-fill:#eef4e7; --green-line:#b7d29c; --green-ink:#5b8a30;
+  --io-fill:#f8e8e1; --io-line:#e8b7a4; --io-ink:#c2572f;
+  --code-fill:#eceaf6; --code-line:#b9b3dc; --code-ink:#5a4fa3;
+  --arrow:#a7a49c; --live:#d38a22; --live-fill:#fbefd9; --bad:#b9412f; --accent:#c2572f;
+  --f-ui:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --page:#1b1a17; --card:#24231f; --ink:#ecebe6; --muted:#a9a59b; --line:#3a3832; --green-fill:#25301c; --green-line:#5d7c3e; --green-ink:#a9d27b;
+  --io-fill:#3a2620; --io-line:#8a4e39; --io-ink:#f0a184; --code-fill:#2a2738; --code-line:#5c5490; --code-ink:#b9b0f0;
+  --arrow:#7d7a72; --live:#f0ad4d; --live-fill:#3b2d14; --bad:#ef8e7e; --accent:#f0a184; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#1b1a17; --card:#24231f; --ink:#ecebe6; --muted:#a9a59b; --line:#3a3832; --green-fill:#25301c; --green-line:#5d7c3e; --green-ink:#a9d27b;
+  --io-fill:#3a2620; --io-line:#8a4e39; --io-ink:#f0a184; --code-fill:#2a2738; --code-line:#5c5490; --code-ink:#b9b0f0;
+  --arrow:#7d7a72; --live:#f0ad4d; --live-fill:#3b2d14; --bad:#ef8e7e; --accent:#f0a184; color-scheme:dark}
+*{box-sizing:border-box} [hidden]{display:none!important}
+body{background:var(--page);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5;margin:0}
+.wrap{max-width:1280px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px}
+h1{font-size:20px;font-weight:600;margin:0}
+button,select,input,textarea{font:inherit;color:inherit} :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.modes{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;background:var(--card)}
+.modes button{border:0;background:transparent;border-radius:999px;padding:7px 16px;font-weight:600;color:var(--muted);cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.tab{border:0;background:transparent;padding:7px 12px;border-radius:999px;cursor:pointer;color:var(--muted);font-weight:500}
+.tab:hover{color:var(--ink)} .tab[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.palette{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px}
+.palette span{font-size:12px;color:var(--muted)}
+.palette select{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:12px;align-items:start}
+@media (max-width:980px){.stage{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:10px;box-shadow:0 0 0 1px var(--line)}
+.diagram{padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.svgbox{overflow-x:auto} svg.d{display:block;width:100%;min-width:620px;height:auto;user-select:none;touch-action:none}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:0 4px}
+.bar .grow{flex:1 1 200px;color:var(--muted);margin:0;font-size:13px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--muted)} .btn.run{background:var(--ink);color:var(--card);border-color:var(--ink);font-weight:600}
+.btn:disabled{opacity:.5;cursor:default} .btn.sm{padding:4px 10px;font-size:13px}
+.runs{background:var(--page);border:1px solid var(--line);border-radius:8px;padding:6px 8px;max-width:260px}
+.stats{font-family:var(--f-mono);font-size:12px;color:var(--muted);padding:0 4px;min-height:18px}
+.msg{font-size:13px;color:var(--green-ink)} .msg.err{color:var(--bad)}
+.confirm{display:inline-flex;gap:6px;align-items:center;font-size:13px;background:var(--live-fill);border-radius:8px;padding:4px 8px}
+/* svg */
+.n rect{stroke-width:1.2}
+.n.llm rect{fill:var(--green-fill);stroke:var(--green-line)} .n.llm text{fill:var(--green-ink)}
+.n.io rect{fill:var(--io-fill);stroke:var(--io-line)} .n.io text{fill:var(--io-ink)}
+.n.code rect{fill:var(--code-fill);stroke:var(--code-line)} .n.code text{fill:var(--code-ink)}
+.n text{font-family:var(--f-ui);font-weight:600;font-size:17px;dominant-baseline:central;text-anchor:middle;pointer-events:none}
+.n text.sub{font-size:11px;font-weight:500;fill:var(--muted)}
+.n{cursor:pointer} .n.sel rect{stroke:var(--ink);stroke-width:2;stroke-dasharray:5 3}
+.n.running rect{stroke:var(--live);stroke-width:2.5;fill:var(--live-fill)} .n.done rect{stroke-width:2} .n.error rect{stroke:var(--bad);stroke-width:2.5} .n.skipped{opacity:.3}
+@media (prefers-reduced-motion:no-preference){.n.running rect{animation:pulse 1.2s ease-in-out infinite}} @keyframes pulse{50%{stroke-width:4}}
+.e path{fill:none;stroke:var(--arrow);stroke-width:1.6} .e.dash path{stroke-dasharray:4 5} .e.hot path{stroke:var(--live);stroke-width:2.2}
+.e text,.ring text{font-family:var(--f-ui);font-size:12px;fill:var(--muted);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--card);stroke-width:5px;stroke-linejoin:round}
+.e.click{cursor:pointer} .e.click .hit{stroke:transparent;stroke-width:14;fill:none} .e.sel path{stroke:var(--ink)}
+.ring circle{fill:none;stroke:var(--arrow);stroke-width:1.6;stroke-dasharray:4 5} .ring.hot circle{stroke:var(--live);stroke-width:2.2}
+.bub rect,.bub path{fill:var(--card);stroke:var(--arrow);stroke-width:1.2}
+.bub text{font-family:var(--f-ui);font-size:12.5px;fill:var(--ink);dominant-baseline:hanging} .bub .dot{fill:var(--live)}
+@media (prefers-reduced-motion:no-preference){.bub .dot{animation:blink 1.1s infinite}.bub .dot:nth-child(2){animation-delay:.18s}.bub .dot:nth-child(3){animation-delay:.36s}}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.handle{fill:var(--card);stroke:var(--arrow);stroke-width:1.5;cursor:crosshair} .handle:hover{stroke:var(--ink)}
+.tmp{stroke:var(--ink);stroke-width:1.5;stroke-dasharray:4 4;fill:none}
+/* panel */
+.panel{padding:14px;display:flex;flex-direction:column;gap:12px;position:sticky;top:max(12px,env(safe-area-inset-top,0px));max-height:calc(100vh - 24px);overflow:auto}
+.panel h2{font-size:16px;margin:0} .panel .kind{font-size:12px;color:var(--muted);margin-top:2px}
+.f{display:flex;flex-direction:column;gap:4px} .f > span{font-size:12px;font-weight:600;color:var(--muted)}
+.f select,.f input,.f textarea{width:100%;background:var(--page);border:1px solid var(--line);border-radius:6px;padding:7px 9px}
+.f textarea{resize:vertical;font-family:var(--f-mono);font-size:12px;line-height:1.45}
+.two{display:grid;grid-template-columns:1fr 110px;gap:8px}
+.checks{display:flex;flex-wrap:wrap;gap:4px 14px} .checks label{display:flex;gap:6px;align-items:center;cursor:pointer;font-size:13px}
+.hint{color:var(--muted);font-size:13px;margin:0}
+.out{background:var(--page);border-radius:6px;padding:9px;font-family:var(--f-mono);font-size:12px;white-space:pre-wrap;max-height:260px;overflow:auto;margin:0}
+.sep{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:10px}
+.empty{color:var(--muted);text-align:center;padding:24px 10px}
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <h1>AI Strategy Playground</h1>
+    <div class="modes" role="group" aria-label="Mode"><button type="button" data-mode="play">Playground</button><button type="button" data-mode="sand">Sandbox</button></div>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Strategies"></nav>
+  <div class="palette" id="palette" hidden>
+    <span>Start from</span><select id="startFrom"></select><button class="btn sm" type="button" id="loadBtn">Load</button>
+    <span id="loadConfirm" class="confirm" hidden>Replace your sandbox? <button class="btn sm" type="button" id="loadYes">Replace</button><button class="btn sm" type="button" id="loadNo">Cancel</button></span>
+    <span style="margin-left:10px">Add</span>
+    <button class="btn sm" type="button" data-add="in">In</button><button class="btn sm" type="button" data-add="llm">LLM call</button>
+    <button class="btn sm" type="button" data-add="router">Router</button><button class="btn sm" type="button" data-add="gate">Gate</button><button class="btn sm" type="button" data-add="out">Out</button>
+  </div>
+  <div class="stage">
+    <section class="card diagram">
+      <div class="svgbox"><svg class="d" id="svg" viewBox="0 0 1000 360" role="img" aria-label="Strategy diagram"></svg></div>
+      <div class="bar">
+        <p class="grow" id="desc"></p>
+        <select class="runs" id="runs" aria-label="Last runs"></select>
+        <button class="btn" type="button" id="resetBtn">Reset</button>
+        <button class="btn" type="button" id="dlRuns" hidden>Download runs</button>
+        <button class="btn" type="button" id="exportBtn" hidden>Export strategy</button>
+        <button class="btn run" type="button" id="runBtn">Run</button>
+        <button class="btn" type="button" id="stopBtn" hidden>Stop</button>
+      </div>
+      <div class="bar"><span class="stats" id="stats"></span><span class="msg" id="msg" aria-live="polite"></span></div>
+    </section>
+    <aside class="card panel" id="panel" aria-live="polite"></aside>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   ENGINE START: runs a strategy graph. The same code runs in the
+   playground, the sandbox and the students' dashboards.
+   Node types: in, out, llm, worker, router, gate, orchestrator,
+   evaluator, debater, aux (retrieval | tools | memory, drawing only).
+   Placeholders in prompts:
+     {{input}}    everything that flows into the box
+     {{question}} the text of the In box (the case)
+     {{subtask}}  a worker's sub-task (from the orchestrator)
+     {{feedback}} the evaluator's feedback (for the box it sends back to)
+     {{debate}}   everything the debaters said so far
+   ===================================================================== */
+const ENGINE = (() => {
+  const fill = (t,v) => String(t||"").replace(/\{\{(\w+)\}\}/g,(m,k)=>k in v?String(v[k]):m);
+  const toks = s => Math.ceil(String(s||"").length/4);
+  const words = s => (String(s).trim().match(/\S+/g)||[]).length;
+  const MODELS = {"claude-haiku-5-5":{name:"Haiku 5.5",tier:"quick"},"claude-sonnet-5-5":{name:"Sonnet 5.5",tier:"default"},"claude-opus-5-5":{name:"Opus 5.5",tier:"complex"}};
+  const modelOf = c => c.model==="custom" ? String(c.customId||"").trim() : c.model;
+  const tierOf = c => (MODELS[c.model]||{tier:"quick"}).tier;
+  const PH = /\{\{(input|question|subtask|feedback|debate)\}\}/;
+  function flowEdges(g){
+    const by=Object.fromEntries(g.nodes.map(n=>[n.id,n]));
+    return g.edges.filter(e=>by[e.from]&&by[e.to]&&by[e.from].type!=="aux"&&by[e.to].type!=="aux"&&!e.loop&&!(by[e.from].type==="debater"&&by[e.to].type==="debater"));
+  }
+  function parseJSON(t){ const m=String(t).match(/\{[\s\S]*\}/); try{ return JSON.parse(m?m[0]:t); }catch(e){ return null; } }
+  function retrieval(knowledge,q){
+    const ws=String(q||"").toLowerCase().match(/[a-zà-ÿ0-9²]{3,}/g)||[];
+    return String(knowledge||"").split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean)
+      .map(p=>({p,s:ws.reduce((n,w)=>n+(p.toLowerCase().includes(w)?1:0),0)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,3).map(x=>x.p);
+  }
+  function calc(expr){ const s=String(expr||""); if(!/^[0-9+\-*/().,%\s]+$/.test(s)) throw new Error("Only numbers and + - * / ( ) are allowed"); const v=Function('"use strict";return ('+s.replace(/,/g,".")+")")(); if(!Number.isFinite(v)) throw new Error("Not a finite number"); return Math.round(v*10000)/10000; }
+
+  /* ctx: {sample, toolsOK, input (optional: replaces the In text), knowledge, memory (array), onMemory(),
+           signal, hooks:{status(id,st), hot(from,to), bubble(id,b|null), label(id,text), step(stepObject)}} */
+  async function run(g, ctx){
+    const H=Object.assign({status(){},hot(){},bubble(){},label(){},step(){}}, ctx.hooks||{});
+    const by=Object.fromEntries(g.nodes.map(n=>[n.id,n]));
+    const D=flowEdges(g);
+    const ins=g.nodes.filter(n=>n.type==="in"), outsN=g.nodes.filter(n=>n.type==="out");
+    if(!ins.length||!outsN.length) throw {msg:"Add at least one In and one Out box, and connect them."};
+    const indeg={}, adj={}; g.nodes.forEach(n=>{indeg[n.id]=0; adj[n.id]=[];});
+    D.forEach(e=>{ indeg[e.to]++; adj[e.from].push(e.to); });
+    const depth={}, q=g.nodes.filter(n=>indeg[n.id]===0).map(n=>n.id), order=[], d2={...indeg};
+    q.forEach(id=>depth[id]=0);
+    while(q.length){ const id=q.shift(); order.push(id); adj[id].forEach(t=>{ depth[t]=Math.max(depth[t]||0,depth[id]+1); if(--d2[t]===0) q.push(t); }); }
+    if(order.length!==g.nodes.length) throw {msg:"The flow has a loop. Only the evaluator may send work back (its Rejected line)."};
+    const levels=[]; order.forEach(id=>{ if(by[id].type!=="aux") (levels[depth[id]] ||= []).push(id); });
+    const question = ctx.input!=null ? ctx.input : (ins[0].cfg.input||"");
+    const val={}, dead=new Set(), skip=new Set(), inputOf={}, subtaskFor={};
+    const steps=[], stats={calls:0,tin:0,tout:0,models:new Set(),answered:new Set()}, t0=performance.now();
+    let transcript="";
+    const now=()=>Math.round(performance.now()-t0);
+    const addStep=s=>{ s.n=steps.length+1; steps.push(s); H.step(s); return s; };
+    const auxFor=(id,kind)=>{ const e=g.edges.find(e=>(e.from===id&&by[e.to]&&by[e.to].type==="aux"&&by[e.to].aux===kind)||(e.to===id&&by[e.from]&&by[e.from].type==="aux"&&by[e.from].aux===kind)); return e?(e.from===id?e.to:e.from):null; };
+
+    function tools(nd){
+      const list=nd.cfg.tools||[], t=[];
+      const use=async(kind,label,inp,fn)=>{ const ax=auxFor(nd.id,kind); if(ax){ H.hot(nd.id,ax); H.status(ax,"running"); H.bubble(ax,{thinking:true}); }
+        const s=addStep({id:ax||nd.id,label:(ax?by[ax].label:label)+" (tool of "+nd.label+")",type:"tool",input:inp,output:"",t_start:now(),t_end:null});
+        let out; try{ out=await fn(); }catch(e){ out="Error: "+(e.message||e); }
+        s.output=typeof out==="string"?out:JSON.stringify(out); s.t_end=now(); H.step(s);
+        if(ax){ H.bubble(ax,{text:s.output.split("\n")[0]}); H.status(ax,"done"); H.hot(ax,nd.id); }
+        return out; };
+      if(list.includes("retrieval")) t.push({name:"search_notes",description:"Search the project notes. Returns up to 3 relevant passages.",inputSchema:{type:"object",properties:{query:{type:"string"}},required:["query"]},
+        execute:async i=>use("retrieval","Retrieval","search: "+i.query,()=>{ const r=retrieval(ctx.knowledge,i.query); return r.length?r.join("\n\n"):"No matching notes."; })});
+      if(list.includes("calculator")) t.push({name:"calculate",description:"Calculate an arithmetic expression exactly, for example 220*165. Returns a number.",inputSchema:{type:"object",properties:{expression:{type:"string"}},required:["expression"]},
+        execute:async i=>use("tools","Calculator","calculate("+i.expression+")",()=>String(calc(i.expression)))});
+      if(list.includes("memory")){
+        t.push({name:"read_memory",description:"Read the notes saved in earlier runs.",inputSchema:{type:"object",properties:{}},execute:async()=>use("memory","Memory","read",()=>ctx.memory&&ctx.memory.length?ctx.memory.join("\n"):"Memory is empty.")});
+        t.push({name:"write_memory",description:"Save a short note for later runs.",inputSchema:{type:"object",properties:{note:{type:"string"}},required:["note"]},execute:async i=>use("memory","Memory","write: "+i.note,()=>{ (ctx.memory||[]).push(String(i.note||"").slice(0,300)); if(ctx.onMemory) ctx.onMemory(); return "Saved."; })});
+      }
+      return t;
+    }
+
+    async function call(nd, prompt, {json=false, shownInput="", round=null}={}){
+      if(!ctx.sample) throw {code:"not_granted"};
+      const c=nd.cfg, mid=modelOf(c);
+      H.status(nd.id,"running"); H.bubble(nd.id,{thinking:true});
+      const T=tools(nd); let usePrompt=prompt;
+      const opts={signal:ctx.signal, modelTier:tierOf(c), cache:false, onText:({text})=>{ if(!json) H.bubble(nd.id,{text}); }};
+      if(mid) opts.model=mid; if(c.effort) opts.effort=c.effort;
+      if(T.length){ if(ctx.toolsOK) opts.tools=T; else usePrompt+=(c.tools.includes("retrieval")?"\n\nNotes:\n"+ctx.knowledge:"")+(c.tools.includes("memory")?"\n\nMemory:\n"+((ctx.memory||[]).join("\n")||"(empty)"):""); }
+      const s=addStep({id:nd.id,label:nd.label,type:nd.type,round,model_asked:mid||"(tier "+tierOf(c)+")",model_answered:"",effort:c.effort||"default",tools:(c.tools||[]).join(", "),input:shownInput,prompt:usePrompt,output:"",t_start:now(),t_end:null,tokens_in:toks(usePrompt),tokens_out:0});
+      let r;
+      try{ r=await ctx.sample(usePrompt,opts); }
+      catch(e){ H.status(nd.id,e&&e.code==="cancelled"?"":"error"); H.bubble(nd.id,null); s.output="Error: "+((e&&e.code)||"failed"); s.t_end=now(); H.step(s); throw e; }
+      s.output=r.text; s.t_end=now(); s.tokens_out=toks(r.text);
+      s.model_answered = r.modelApplied ? r.modelApplied : ("not "+(mid||"named")+": a "+r.modelTierApplied+"-tier model");
+      stats.calls++; stats.tin+=s.tokens_in; stats.tout+=s.tokens_out; stats.models.add(mid||tierOf(c)); stats.answered.add(s.model_answered);
+      H.step(s);
+      let res=r.text;
+      if(json){ res=parseJSON(r.text)||{}; }
+      H.bubble(nd.id,{text: json ? (res.route||res.verdict||(Array.isArray(res.subtasks)?res.subtasks.length+" sub-tasks":r.text.slice(0,80))) : r.text, end:true});
+      H.status(nd.id,"done");
+      return res;
+    }
+    const combine = live => live.length>1 ? live.map(e=>"## From "+by[e.from].label+"\n"+val[e.from]).join("\n\n") : (live[0]?String(val[live[0].from]):"");
+    const liveIn = id => D.filter(e=>e.to===id).filter(e=>!dead.has(e.from)&&!skip.has(e.from+">"+id)&&val[e.from]!=null);
+    const vars = (id,input,extra) => Object.assign({input,question,subtask:subtaskFor[id]||"",feedback:"None yet.",debate:transcript||"(nobody has spoken yet)"},extra||{});
+    const promptFor = (nd,v) => { let p=fill(nd.cfg.prompt,v); if(!PH.test(nd.cfg.prompt||"")) p+="\n\nInput:\n"+v.input; return p; };
+
+    async function runNode(id){
+      const nd=by[id]; const live=liveIn(id);
+      if(nd.type!=="in" && !live.length){ dead.add(id); H.status(id,"skipped"); return; }
+      live.forEach(e=>H.hot(e.from,id));
+      const input=combine(live); inputOf[id]=input;
+      if(nd.type==="in"){ val[id]=question; H.status(id,"done"); addStep({id,label:nd.label,type:"in",input:"",output:question,t_start:now(),t_end:now()}); return; }
+      if(nd.type==="out"){ val[id]=input; H.status(id,"done"); addStep({id,label:nd.label,type:"out",input,output:input,t_start:now(),t_end:now()}); return; }
+      if(nd.type==="gate"){
+        const n=words(input), max=nd.cfg.maxWords||60, pass=n<=max;
+        D.filter(e=>e.from===id).forEach(e=>{ const fail=/fail/i.test(e.label||""); if(pass===fail) skip.add(id+">"+e.to); });
+        val[id]=input; H.status(id,"done"); H.bubble(id,{text:pass?"Pass":"Fail",end:true});
+        addStep({id,label:nd.label,type:"gate",input,output:n+" words, maximum "+max+": "+(pass?"pass":"fail"),t_start:now(),t_end:now()}); return; }
+      if(nd.type==="router"){
+        const targets=D.filter(e=>e.from===id).map(e=>by[e.to]);
+        const r=await call(nd, promptFor(nd,vars(id,input))+`\n\nReply with only JSON: {"route": "<one of: ${targets.map(t=>t.label).join(" | ")}>", "why": "one sentence"}`,{json:true,shownInput:input});
+        const pick=targets.find(t=>t.label.toLowerCase()===String(r.route||"").toLowerCase())||targets[0];
+        targets.forEach(t=>{ if(pick&&t.id!==pick.id) skip.add(id+">"+t.id); });
+        val[id]=input; steps[steps.length-1].note="Route: "+(pick?pick.label:"none")+(r.why?" · "+r.why:""); H.step(steps[steps.length-1]); return; }
+      if(nd.type==="orchestrator"){
+        const targets=D.filter(e=>e.from===id).map(e=>e.to);
+        const r=await call(nd, promptFor(nd,vars(id,input))+`\n\nReply with only JSON: {"subtasks": [{"title": "2-4 words", "instruction": "one sentence"}]} with at most ${targets.length} sub-tasks.`,{json:true,shownInput:input});
+        let subs=(Array.isArray(r.subtasks)?r.subtasks:[]).slice(0,targets.length); if(!subs.length) subs=[{title:"Whole task",instruction:question}];
+        targets.forEach((t,i)=>{ if(subs[i]){ subtaskFor[t]=(subs[i].title||"")+": "+(subs[i].instruction||""); H.label(t,String(subs[i].title||"Sub-task").slice(0,22)); } else skip.add(id+">"+t); });
+        val[id]=subs.map((s,i)=>(i+1)+". "+s.title+": "+s.instruction).join("\n"); steps[steps.length-1].note=val[id]; return; }
+      if(nd.type==="evaluator"){
+        const back=g.edges.find(e=>e.loop&&e.from===id); const gen=back?by[back.to]:null; const max=Math.max(1,Math.min(5,nd.cfg.maxRounds||3));
+        let sol=input;
+        for(let r=1;r<=max;r++){
+          const ev=await call(nd, fill(nd.cfg.prompt,vars(id,input,{solution:sol,input:sol}))+`\n\nReply with only JSON: {"verdict": "accept" | "reject", "feedback": "what to improve, one or two sentences"}`,{json:true,shownInput:sol,round:r});
+          steps[steps.length-1].note="Round "+r+": "+(ev.verdict||"?")+(ev.feedback?" · "+ev.feedback:"");
+          if(ev.verdict==="accept"||!gen||r===max){ val[id]=sol+(ev.verdict==="accept"?"":"\n\n(not accepted after "+r+" round"+(r>1?"s":"")+"; this is the last version)"); return; }
+          H.hot(id,gen.id);
+          sol=await call(gen, promptFor(gen,vars(gen.id,inputOf[gen.id],{feedback:ev.feedback||"Improve it."})),{shownInput:inputOf[gen.id]+"\n\nFeedback: "+(ev.feedback||""),round:r+1});
+          val[gen.id]=sol; H.hot(gen.id,id);
+        }
+        return; }
+      // llm, worker
+      val[id]=await call(nd, promptFor(nd,vars(id,input)),{shownInput:input});
+    }
+    async function runDebate(ids){
+      const live={}; ids.forEach(id=>{ live[id]=liveIn(id); live[id].forEach(e=>H.hot(e.from,id)); inputOf[id]=combine(live[id]); });
+      const act=ids.filter(id=>live[id].length); ids.filter(id=>!live[id].length).forEach(id=>{ dead.add(id); H.status(id,"skipped"); });
+      const rounds=Math.max(1,Math.min(5,Math.max(...act.map(id=>by[id].cfg.rounds||2))));
+      const said={}; act.forEach(id=>said[id]=[]);
+      for(let r=1;r<=rounds;r++){
+        if(r>1) g.edges.filter(e=>act.includes(e.from)&&act.includes(e.to)).forEach(e=>H.hot(e.from,e.to));
+        const before=transcript||"(nobody has spoken yet: give your opening position)";
+        const outs=await Promise.all(act.map(id=>call(by[id], promptFor(by[id],vars(id,inputOf[id],{debate:before})),{shownInput:"Round "+r+". The debate so far:\n"+before,round:r})));
+        transcript+=(transcript?"\n\n":"")+"Round "+r+"\n"+act.map((id,i)=>"["+by[id].label+"]: "+outs[i]).join("\n");
+        act.forEach((id,i)=>said[id].push("Round "+r+": "+outs[i]));
+      }
+      act.forEach(id=>val[id]=said[id].join("\n\n"));
+    }
+    for(const lvl of levels){
+      const deb=lvl.filter(id=>by[id].type==="debater"), rest=lvl.filter(id=>by[id].type!=="debater");
+      await Promise.all([...rest.map(runNode), deb.length?runDebate(deb):Promise.resolve()]);
+    }
+    const reached = outsN.filter(o=>val[o.id]!=null);
+    const output = reached.map(o=>(reached.length>1?"## "+o.label+"\n":"")+val[o.id]).join("\n\n") || "No output reached an Out box.";
+    return {output, steps, transcript, question, seconds:+((performance.now()-t0)/1000).toFixed(1), calls:stats.calls, tokens_est:stats.tin+stats.tout, models_asked:[...stats.models], models_answered:[...stats.answered]};
+  }
+  function version(g){ const s=JSON.stringify({n:g.nodes.map(n=>[n.id,n.type,n.label,n.cfg&&{...n.cfg,input:undefined}]),e:g.edges.map(e=>[e.from,e.to,e.label||"",!!e.loop])}); let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h.toString(16).padStart(8,"0").slice(0,6); }
+  return {run, flowEdges, version, fill, MODELS};
+})();
+/* ENGINE END */
+
+(() => {
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+const MODEL_LIST=[["claude-haiku-5-5","Claude Haiku 5.5"],["claude-sonnet-5-5","Claude Sonnet 5.5"],["claude-opus-5-5","Claude Opus 5.5"],["custom","Other model (type its ID)"]];
+const mname=c=>c.model==="custom"?(c.customId||"Other model"):(ENGINE.MODELS[c.model]||{name:c.model}).name;
+
+/* ---------- the one example, everywhere: what do we cook tonight? ---------- */
+const CASE="What do we cook tonight? Four friends come for dinner.\nBudget: €30. Time: 45 minutes. Kitchen: one oven, two hobs.\nGuests:\n- Anna: vegetarian\n- Ben: allergic to nuts\n- Chloé: loves spicy food, does not like mushrooms\n- David: lactose intolerant\nOptions:\n- Vegetable curry with rice: €14, 40 min, spicy, with cashew nuts and cream\n- Pasta pesto: €10, 20 min, pesto with pine nuts and parmesan\n- Mushroom risotto: €16, 45 min, with butter and parmesan\n- Chickpea and tomato stew with bread: €12, 35 min, vegan, mild";
+const KNOWLEDGE="Curry can be made without cashews; coconut milk can replace the cream.\n\nPesto can be made with sunflower seeds instead of pine nuts, and without cheese.\n\nRisotto can be made with olive oil instead of butter, and without parmesan.\n\nChilli flakes on the side make a mild dish spicy for one person.\n\nThe last time this group ate together, they had pasta.";
+const ADV="End with one line: Advice: <dish>.";
+const L=(id,x,y,label,cfg,w,type)=>({id,type:type||"llm",x,y,w:w||150,h:56,label,cfg:Object.assign({model:"claude-haiku-5-5",effort:"",prompt:"{{input}}",tools:[]},cfg||{})});
+const IN=(x,y)=>({id:"in",type:"in",x,y,w:90,h:50,label:"In",cfg:{input:CASE}});
+const OUT=(x,y,id,label)=>({id:id||"out",type:"out",x,y,w:label?100:90,h:50,label:label||"Out",cfg:{}});
+const AUX=(id,x,y,label,aux)=>({id,type:"aux",aux,x,y,w:150,h:56,label,cfg:{}});
+const E=(from,to,o)=>Object.assign({from,to},o||{});
+const GUESTS=[["anna","Anna","You are vegetarian."],["ben","Ben","You are allergic to nuts; even traces are dangerous for you."],["chloe","Chloé","You love spicy food and you do not like mushrooms."],["david","David","You are lactose intolerant."]];
+const guestPrompt=(name,who)=>`You are ${name}, a guest at dinner tonight. ${who} Look at the options and say which dishes you can eat and which one you prefer, in at most 50 words.\n\n{{input}}`;
+const debPrompt=(name,who)=>`You are ${name}, at dinner tonight. ${who} Together with the others you choose what to cook.\n\nCase:\n{{question}}\n\nThe discussion so far:\n{{debate}}\n\nSay which dish you want and why, in at most 50 words. If others have spoken, answer them directly.`;
+const PRESETS={
+  augmented:{name:"Single call",desc:"One LLM call does the whole task, with retrieval, tools and memory.",
+    nodes:[IN(80,120),L("llm",500,120,"LLM",{model:"claude-sonnet-5-5",tools:["retrieval","calculator","memory"],prompt:"Advise what to cook tonight. Search the notes for ways to adapt a recipe, use the calculator for the cost per person, and save the choice in memory. Max 100 words. "+ADV+"\n\n{{input}}"},170),OUT(910,120),
+      AUX("retrieval",250,290,"Retrieval","retrieval"),AUX("tools",500,290,"Tools","tools"),AUX("memory",750,290,"Memory","memory")],
+    edges:[E("in","llm"),E("llm","out"),E("llm","retrieval",{label:"Query",bend:-28,dash:1}),E("retrieval","llm",{label:"Results",bend:-28,dash:1}),E("llm","tools",{label:"Call",bend:-28,dash:1}),E("tools","llm",{label:"Response",bend:-28,dash:1}),E("llm","memory",{label:"Read",bend:-28,dash:1}),E("memory","llm",{label:"Write",bend:-28,dash:1})]},
+  chain:{name:"Chain",desc:"Fixed steps in a row; each call works on the output of the one before. The gate is a check in code.",
+    nodes:[IN(60,150),L("c1",215,150,"Safe dishes",{prompt:"Which options are safe for every guest (diets and allergies), possibly with a small change to the recipe? Name at most 2, with the change. Max 60 words.\n\n{{input}}"},140),
+      {id:"gate",type:"gate",x:375,y:150,w:100,h:56,label:"Gate",cfg:{maxWords:60}},
+      L("c2",540,150,"Budget & time",{prompt:"Check these dishes against the budget, the time and the kitchen. Max 60 words.\n\nSafe dishes:\n{{input}}\n\nCase:\n{{question}}"},150),
+      L("c3",715,150,"Choose",{prompt:"Choose one dish and say what to change in the recipe. Max 70 words. "+ADV+"\n\n{{input}}"},130),OUT(905,150),OUT(375,290,"exit","Exit")],
+    edges:[E("in","c1"),E("c1","gate"),E("gate","c2",{label:"Pass"}),E("c2","c3"),E("c3","out"),E("gate","exit",{label:"Fail",dash:1})]},
+  routing:{name:"Routing",desc:"A router first decides what kind of case this is, then sends it to the one specialist that fits.",
+    nodes:[IN(70,180),L("router",280,180,"Router",{prompt:"Which question decides tonight's dinner? Pick the specialist who should answer.\n\n{{input}}"},130,"router"),
+      L("r1",580,70,"Allergies & diets",{prompt:"You look only at allergies and diets. Choose one dish for tonight from that point of view, with any change to the recipe. Max 70 words. "+ADV+"\n\n{{input}}"},180),
+      L("r2",580,180,"Budget & time",{prompt:"You look only at budget, time and kitchen. Choose one dish for tonight from that point of view. Max 70 words. "+ADV+"\n\n{{input}}"},180),
+      L("r3",580,290,"Taste",{prompt:"You look only at taste: what will everyone enjoy? Choose one dish for tonight. Max 70 words. "+ADV+"\n\n{{input}}"},180),OUT(895,180)],
+    edges:[E("in","router"),E("router","r1",{dash:1,bend:-20}),E("router","r2",{dash:1}),E("router","r3",{dash:1,bend:20}),E("r1","out",{dash:1,bend:-20}),E("r2","out",{dash:1}),E("r3","out",{dash:1,bend:20})]},
+  parallel:{name:"Parallel",desc:"Several calls run at the same time, one per guest; an aggregator combines their answers.",
+    nodes:[IN(70,180),...GUESTS.map(([id,n,w],i)=>L(id,380,45+i*90,n,{prompt:guestPrompt(n,w)},130)),
+      L("host",670,180,"Aggregator",{model:"claude-sonnet-5-5",prompt:"You are the host. Your four guests gave their views. Choose one dish that is safe for everyone and fits the budget and time; say what to change in the recipe. Max 90 words. "+ADV+"\n\nCase:\n{{question}}\n\nGuests:\n{{input}}"},130),OUT(900,180)],
+    edges:[...GUESTS.map(([id],i)=>E("in",id,{dash:1,bend:[-14,-5,5,14][i]})),...GUESTS.map(([id],i)=>E(id,"host",{dash:1,bend:[-14,-5,5,14][i]})),E("host","out")]},
+  orchestrator:{name:"Orchestrator",desc:"An orchestrator decides during the run which sub-tasks are needed and hands them to workers; a synthesizer combines the results.",
+    nodes:[IN(60,180),L("orch",255,180,"Orchestrator",{model:"claude-sonnet-5-5",prompt:"Split the decision about tonight's dinner into the sub-tasks that are needed (at most 3), one per worker.\n\n{{input}}"},130,"orchestrator"),
+      ...[1,2,3].map(i=>L("w"+i,500,75+(i-1)*105,"Worker "+i,{prompt:"Do only this sub-task, max 60 words.\nSub-task: {{subtask}}\n\nCase:\n{{question}}"},150,"worker")),
+      L("synth",745,180,"Synthesizer",{model:"claude-sonnet-5-5",prompt:"Combine the workers' results and choose one dish, with what to change in the recipe. Max 90 words. "+ADV+"\n\nCase:\n{{question}}\n\nResults:\n{{input}}"},130),OUT(925,180)],
+    edges:[E("in","orch"),E("orch","w1",{dash:1,bend:-22}),E("orch","w2",{dash:1}),E("orch","w3",{dash:1,bend:22}),E("w1","synth",{dash:1,bend:-22}),E("w2","synth",{dash:1}),E("w3","synth",{dash:1,bend:22}),E("synth","out")]},
+  evaluator:{name:"Critic",desc:"A generator makes a proposal; an evaluator checks it against criteria and sends feedback, until it is accepted.",
+    nodes:[IN(70,180),L("gen",290,180,"Generator",{prompt:"Propose the dinner: one dish, what to change in the recipe, and why it works for every guest. "+ADV+"\n\n{{input}}\n\nFeedback on your previous proposal: {{feedback}}"},150),
+      L("eval",660,180,"Evaluator",{model:"claude-sonnet-5-5",maxRounds:3,prompt:"Check the proposal against these rules: no nuts at all (Ben); vegetarian (Anna); no lactose (David); no mushrooms (Chloé); within the budget and the time.\n\nCase:\n{{question}}\n\nProposal:\n{{input}}"},170,"evaluator"),OUT(905,180)],
+    edges:[E("in","gen"),E("gen","eval",{label:"Proposal",bend:-35}),E("eval","gen",{label:"Rejected + feedback",bend:-35,dash:1,loop:1}),E("eval","out",{label:"Accepted"})]},
+  debate:{name:"Debate",desc:"The four guests argue in rounds and answer each other; a judge reads the whole debate and decides.",
+    vbh:440, ring:{x:470,y:220,r:110,label:"2 rounds: they answer each other",from:"in",to:"host"},
+    nodes:[IN(90,220),...GUESTS.map(([id,n,w],i)=>{ const a=[-90,0,90,180][i]*Math.PI/180; return L(id,Math.round(470+110*Math.cos(a)),Math.round(220+110*Math.sin(a)),n,{rounds:2,prompt:debPrompt(n,w)},110,"debater"); }),
+      L("host",770,220,"Judge",{model:"claude-sonnet-5-5",prompt:"You are the host and the judge. Read the discussion and choose one dish that is safe for everyone, with what to change in the recipe. Max 80 words. "+ADV+"\n\nCase:\n{{question}}\n\nDiscussion:\n{{debate}}"},120),OUT(930,220)],
+    edges:[...GUESTS.map(([id])=>E("in",id,{hide:1})),...GUESTS.map(([id],i)=>E(id,GUESTS[(i+1)%4][0],{hide:1})),...GUESTS.map(([id])=>E(id,"host",{hide:1})),E("host","out")]}
+};
+const ORDER=["augmented","chain","routing","parallel","orchestrator","evaluator","debate"];
+const TYPE_INFO={in:"What goes into the strategy",out:"The result",llm:"LLM call",worker:"Worker: does one sub-task of the orchestrator",router:"Router: sends the case to one specialist",gate:"Gate: a simple check in code, not an LLM",orchestrator:"Orchestrator: plans sub-tasks for the workers it connects to",evaluator:"Evaluator: checks against criteria, accepts or sends feedback",debater:"Debater: argues every round and answers the others"};
+const AUX_INFO={retrieval:"Searches the notes when the LLM asks.",tools:"A calculator the LLM can call.",memory:"Notes that stay between runs, in this browser."};
+
+/* ---------- saved state ---------- */
+const STORE="ai-playground-v4", MAXRUNS=30;
+const SAND_EMPTY=()=>({name:"My strategy",base:"",nodes:[IN(110,200),L("n2",470,200,"LLM call",{prompt:"{{input}}"}),OUT(830,200)],edges:[E("in","n2"),E("n2","out")],seq:3});
+let S={mode:"play",tab:"parallel",over:{},sandbox:null,runs:{},view:{},seq:0,knowledge:KNOWLEDGE,memory:[]};
+try{ const s=JSON.parse(localStorage.getItem(STORE)||"null"); if(s) S=Object.assign(S,s); }catch(e){}
+if(!S.sandbox) S.sandbox=SAND_EMPTY(); if(!ORDER.includes(S.tab)) S.tab="parallel";
+function save(){ for(let i=0;i<5;i++){ try{ localStorage.setItem(STORE,JSON.stringify(S)); return; }catch(e){ const k=Object.keys(S.runs).sort((a,b)=>S.runs[b].length-S.runs[a].length)[0]; if(!k||!S.runs[k].length) return; S.runs[k].pop(); } } }
+const sand=()=>S.mode==="sand";
+const key=()=>sand()?"sandbox":S.tab;
+function graph(){ if(sand()) return S.sandbox; const p=PRESETS[S.tab], o=S.over[S.tab]||{};
+  return Object.assign({},p,{nodes:p.nodes.map(n=>Object.assign({},n,{cfg:Object.assign({},n.cfg,o[n.id]||{})}))}); }
+function setCfg(nd,k,v){ if(sand()){ if(k==="label") nd.label=v; else nd.cfg[k]=v; } else { ((S.over[S.tab] ||= {})[nd.id] ||= {})[k]=v; nd.cfg[k]=v; } save(); }
+const runsList=()=>S.runs[key()]||[];
+
+/* ---------- what is shown: a live run, or a saved run ---------- */
+let status={}, labels={}, bubbles={}, hot=new Set(), selected=null, selEdge=null, running=false, ctl=null, live=null;
+const shown=()=>live||runsList().find(r=>r.run_id===S.view[key()])||runsList()[0]||null;
+function restore(){ status={}; labels={}; bubbles={}; hot=new Set(); const r=live?null:shown(); if(r){ Object.assign(status,r.status||{}); Object.assign(labels,r.labels||{}); (r.hot||[]).forEach(k=>hot.add(k)); } }
+
+/* ---------- drawing ---------- */
+const svg=$("svg");
+function anchor(a,b,p){ const dx=b.x-a.x,dy=b.y-a.y,hw=a.w/2+p,hh=a.h/2+p,t=Math.min(dx?hw/Math.abs(dx):1e9,dy?hh/Math.abs(dy):1e9); return {x:a.x+dx*t,y:a.y+dy*t}; }
+function epath(a,b,bend){ const p1=anchor(a,b,6),p2=anchor(b,a,8),mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2,dx=p2.x-p1.x,dy=p2.y-p1.y,l=Math.hypot(dx,dy)||1,cx=mx-dy/l*(bend||0)*1.6,cy=my+dx/l*(bend||0)*1.6; return {d:`M${p1.x.toFixed(1)},${p1.y.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`,lx:(p1.x+2*cx+p2.x)/4,ly:(p1.y+2*cy+p2.y)/4}; }
+const VBH=()=>sand()?440:(graph().vbh||360);
+const kind=n=>n.type==="in"||n.type==="out"?"io":(n.type==="gate"?"code":"llm");
+function fit(s,w){ const m=Math.floor(w/9.6); return s.length>m?s.slice(0,m-1)+"…":s; }
+function sub(n){ if(["aux","in","out"].includes(n.type)) return ""; if(n.type==="gate") return "max "+(n.cfg.maxWords||60)+" words"; const t=(n.cfg.tools||[]).length; return mname(n.cfg).replace("Claude ","")+(t?" · "+t+" tool"+(t>1?"s":""):""); }
+const ARROW=c=>`<marker id="${c}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--${c==="ah"?"arrow":"live"})" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>`;
+function render(){
+  const g=graph(), sb=sand(); svg.setAttribute("viewBox","0 0 1000 "+VBH());
+  const by=Object.fromEntries(g.nodes.map(n=>[n.id,n]));
+  let h=`<defs>${ARROW("ah")}${ARROW("ahh")}</defs>`;
+  if(sb) h+=`<rect x="0" y="0" width="1000" height="440" fill="transparent"/>`;
+  if(g.ring){ const R=g.ring, ringHot=[...hot].some(k=>{ const [a,b]=k.split(">"); return by[a]&&by[b]&&by[a].type==="debater"&&by[b].type==="debater"; });
+    h+=`<g class="ring ${ringHot?"hot":""}"><circle cx="${R.x}" cy="${R.y}" r="${R.r}"/><text x="${R.x}" y="${R.y+R.r+44}">${esc(R.label||"")}</text></g>`;
+    const a=by[R.from], b=by[R.to];
+    if(a){ const k=[...hot].some(x=>x.startsWith(R.from+">")); const p1=anchor(a,{x:R.x,y:R.y},6); const p2={x:R.x-R.r-62,y:R.y};
+      h+=`<g class="e ${k?"hot":""}"><path d="M${p1.x},${p1.y} L${p2.x},${p2.y}" marker-end="url(#${k?"ahh":"ah"})"/></g>`; }
+    if(b){ const k=[...hot].some(x=>x.endsWith(">"+R.to)); const p2=anchor(b,{x:R.x,y:R.y},8); const p1={x:R.x+R.r+62,y:R.y};
+      h+=`<g class="e ${k?"hot":""}"><path d="M${p1.x},${p1.y} L${p2.x},${p2.y}" marker-end="url(#${k?"ahh":"ah"})"/></g>`; } }
+  g.edges.forEach((e,i)=>{ if(e.hide) return; const a=by[e.from],b=by[e.to]; if(!a||!b) return; const p=epath(a,b,e.bend||0), k=hot.has(e.from+">"+e.to);
+    h+=`<g class="e ${e.dash?"dash":""} ${k?"hot":""} ${sb?"click":""} ${sb&&selEdge===i?"sel":""}" data-edge="${i}">${sb?`<path class="hit" d="${p.d}"/>`:""}<path d="${p.d}" marker-end="url(#${k?"ahh":"ah"})"/>${e.label?`<text x="${p.lx.toFixed(1)}" y="${p.ly.toFixed(1)}">${esc(e.label)}</text>`:""}</g>`; });
+  g.nodes.forEach(n=>{ const lab=labels[n.id]||n.label, s=sub(n);
+    h+=`<g class="n ${kind(n)} ${status[n.id]||""} ${selected===n.id?"sel":""}" data-node="${esc(n.id)}" tabindex="0" role="button" aria-label="${esc(lab)}"><rect x="${n.x-n.w/2}" y="${n.y-n.h/2}" width="${n.w}" height="${n.h}" rx="${kind(n)==="io"?n.h/2:3}"/><text x="${n.x}" y="${n.y-(s?6:0)}">${esc(fit(lab,n.w))}</text>${s?`<text class="sub" x="${n.x}" y="${n.y+14}">${esc(s)}</text>`:""}${sb?`<circle class="handle" data-handle="${esc(n.id)}" cx="${n.x+n.w/2}" cy="${n.y}" r="7"/>`:""}</g>`; });
+  h+=bubblesSvg(by); svg.innerHTML=h;
+}
+function wrapTail(s,w,n){ const ws=String(s||"").replace(/\s+/g," ").trim().split(" "),out=[]; let l=""; for(const x of ws){ if((l+" "+x).trim().length>w){ if(l) out.push(l); l=x; } else l=(l+" "+x).trim(); } if(l) out.push(l); const t=out.slice(-n); if(out.length>n) t[0]="…"+t[0]; return t.map(x=>x.length>w+1?x.slice(0,w)+"…":x); }
+function bubblesSvg(by){ let h=""; const vb=VBH(), ring=graph().ring;
+  for(const [id,b] of Object.entries(bubbles)){ const n=by[id]; if(!n||!b) continue;
+    const L2=b.thinking?[]:wrapTail(b.text,30,2), W=b.thinking?62:210, H=b.thinking?26:L2.length*16+14;
+    let x=Math.max(4,Math.min(1000-W-4,n.x-W/2)), above=true, y=n.y-n.h/2-12-H; if(y<4||(ring&&n.type==="debater"&&n.y>ring.y+10)){ above=false; y=n.y+n.h/2+12; } if(y+H>vb-2) y=vb-H-2;
+    const tx=Math.max(x+12,Math.min(x+W-12,n.x)); const tail=above?`M${tx-7},${y+H-0.6} L${tx},${y+H+9} L${tx+7},${y+H-0.6}`:`M${tx-7},${y+0.6} L${tx},${y-9} L${tx+7},${y+0.6}`;
+    h+=`<g class="bub" aria-hidden="true"><rect x="${x}" y="${y}" width="${W}" height="${H}" rx="10"/><path d="${tail}"/><rect x="${tx-8}" y="${above?y+H-3:y+1}" width="16" height="3" style="stroke:none;fill:var(--card)"/>`;
+    if(b.thinking) h+=`<g><circle class="dot" cx="${x+19}" cy="${y+H/2}" r="3.5"/><circle class="dot" cx="${x+31}" cy="${y+H/2}" r="3.5"/><circle class="dot" cx="${x+43}" cy="${y+H/2}" r="3.5"/></g>`;
+    else L2.forEach((l,i)=>{ h+=`<text x="${x+11}" y="${y+8+i*16}">${esc(l)}</text>`; }); h+=`</g>`; }
+  return h; }
+
+/* ---------- top: mode, tabs, bar ---------- */
+function renderTop(){
+  document.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===S.mode)));
+  $("tabs").hidden=sand(); $("palette").hidden=!sand(); $("exportBtn").hidden=!sand(); $("dlRuns").hidden=!sand(); $("resetBtn").hidden=sand();
+  $("tabs").innerHTML=ORDER.map(k=>`<button class="tab" type="button" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(PRESETS[k].name)}</button>`).join("");
+  $("desc").textContent=sand()?"":PRESETS[S.tab].desc;
+  $("startFrom").innerHTML=`<option value="">Empty</option>`+ORDER.map(k=>`<option value="${k}">${esc(PRESETS[k].name)}</option>`).join("");
+  renderRuns();
+}
+function renderRuns(){ const L2=runsList(), cur=shown();
+  $("runs").innerHTML = L2.length ? L2.map(r=>`<option value="${esc(r.run_id)}" ${cur&&!live&&cur.run_id===r.run_id?"selected":""}>Run ${esc(r.run_id)} · ${esc(new Date(r.date_time).toLocaleString([],{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}))}${r.error?" · error":""}</option>`).join("") : `<option value="">No runs yet</option>`;
+  $("runs").disabled=!L2.length||running; }
+function renderStats(){ const r=live||shown(); $("stats").textContent = live ? "running…" : (r&&r.calls!=null ? `${r.calls} calls · ≈${(r.tokens_est||0).toLocaleString()} tokens (estimate) · ${r.seconds} s` : ""); }
+function refresh(){ restore(); renderTop(); render(); renderPanel(); renderStats(); }
+document.querySelector(".modes").addEventListener("click",e=>{ const b=e.target.closest("[data-mode]"); if(!b||running) return; S.mode=b.dataset.mode; selected=null; selEdge=null; $("msg").textContent=""; save(); refresh(); });
+$("tabs").addEventListener("click",e=>{ const b=e.target.closest("[data-tab]"); if(!b||running) return; S.tab=b.dataset.tab; selected=null; $("msg").textContent=""; save(); refresh(); });
+$("runs").addEventListener("change",e=>{ S.view[key()]=e.target.value; save(); refresh(); });
+$("resetBtn").addEventListener("click",()=>{ if(running) return; if(sand()){ S.sandbox=SAND_EMPTY(); } else delete S.over[S.tab]; selected=null; save(); refresh(); $("msg").textContent=sand()?"Sandbox emptied.":"Back to the original settings."; });
+$("loadBtn").addEventListener("click",()=>{ $("loadConfirm").hidden=false; });
+$("loadNo").addEventListener("click",()=>{ $("loadConfirm").hidden=true; });
+$("loadYes").addEventListener("click",()=>{ if(running) return; editing=null; const k=$("startFrom").value; S.sandbox = k ? Object.assign({name:PRESETS[k].name+" (my version)",base:k,seq:1},clone({nodes:PRESETS[k].nodes,edges:PRESETS[k].edges,ring:PRESETS[k].ring||undefined})) : SAND_EMPTY(); $("loadConfirm").hidden=true; selected=null; save(); refresh(); });
+
+/* ---------- side panel: settings of the clicked box, and what went in and out ---------- */
+function stepsOf(id){ const r=shown(); return r&&r.steps?r.steps.filter(s=>s.id===id):[]; }
+function ioHtml(id){ const ss=stepsOf(id); if(!ss.length) return "";
+  return `<div class="sep">`+ss.map(s=>`<div class="f"><span>${s.round?"Round "+s.round+" · ":""}What went in</span><pre class="out">${esc(s.type==="in"?"(the text above)":(s.input||"(nothing)"))}</pre></div>
+    <div class="f"><span>What came out${s.model_answered?" · "+esc(s.model_answered):""}${s.t_end!=null?" · "+((s.t_end-s.t_start)/1000).toFixed(1)+" s":""}</span><pre class="out">${esc(s.output)||"…"}${s.note?"\n\n→ "+esc(s.note):""}</pre></div>`).join("")+`</div>`; }
+let editing=null;
+function renderPanel(){
+  const g=graph(), P=$("panel"), sb=sand();
+  if(sb&&editing){ const left=(editing.md.match(/_\(fill in\)_/g)||[]).length;
+    P.innerHTML=`<div><h2>${esc(editing.name)}</h2><div class="kind">${left?"Replace every _(fill in)_ with your own answer: "+left+" left.":"Everything is filled in."}</div></div>
+      <label class="f"><span>Your strategy file</span><textarea id="edMd" rows="26" spellcheck="true">${esc(editing.md)}</textarea></label>
+      <div style="display:flex;gap:8px"><button class="btn run" type="button" id="edSave">Save</button><button class="btn" type="button" id="edClose">Close</button></div>`;
+    $("edMd").oninput=e=>{ editing.md=e.target.value; editing.dirty=true; };
+    $("edSave").onclick=async()=>{ const m=$("msg"); m.classList.remove("err"); const ok=await saveExport(editing); if(ok){ editing.dirty=false; m.textContent="Saved "+editing.name+". Type sync in Claude Code to add it to your folder."; } else { m.classList.add("err"); m.textContent="Not saved ("+dbWhy+")."; } renderPanel(); };
+    $("edClose").onclick=()=>{ if(editing.dirty&&!$("edClose").dataset.sure){ $("edClose").dataset.sure="1"; $("edClose").textContent="Close without saving"; return; } editing=null; renderPanel(); };
+    return; }
+  if(sb&&selEdge!=null&&g.edges[selEdge]){ const e=g.edges[selEdge];
+    P.innerHTML=`<h2>Line</h2><label class="f"><span>Label (a gate follows the line labelled “Fail” when it fails)</span><input type="text" id="eLabel" value="${esc(e.label||"")}"></label><button class="btn" type="button" id="delEdge">Remove this line</button>`;
+    $("eLabel").oninput=ev=>{ e.label=ev.target.value; save(); render(); }; $("delEdge").onclick=()=>{ g.edges.splice(selEdge,1); selEdge=null; save(); render(); renderPanel(); }; return; }
+  const nd=g.nodes.find(x=>x.id===selected);
+  if(!nd){ const r=shown(); P.innerHTML = r&&!live ? `<h2>Output</h2><pre class="out" style="max-height:none">${esc(r.error||r.ai_output)}</pre><p class="hint">Click a box to see what went in and what came out.</p>` : `<div class="empty">Click a box to see and change it.</div>`; return; }
+  const c=nd.cfg; let h=`<div><h2>${esc(labels[nd.id]||nd.label)}</h2><div class="kind">${esc(nd.type==="aux"?AUX_INFO[nd.aux]:TYPE_INFO[nd.type])}</div></div>`;
+  if(sb&&nd.type!=="aux") h+=`<label class="f"><span>Name</span><input type="text" id="fLabel" value="${esc(nd.label)}"></label>`;
+  if(nd.type==="in") h+=`<label class="f"><span>Input</span><textarea id="fInput" rows="9">${esc(c.input||"")}</textarea></label>`;
+  else if(nd.type==="gate") h+=`<label class="f"><span>Maximum number of words</span><input type="number" id="fMax" min="1" value="${esc(c.maxWords||60)}"></label>`;
+  else if(nd.type==="aux"){ if(nd.aux==="retrieval") h+=`<label class="f"><span>Notes to search (one passage per paragraph)</span><textarea id="fKnow" rows="8">${esc(S.knowledge)}</textarea></label>`;
+    if(nd.aux==="memory") h+=`<div class="f"><span>In memory now</span><pre class="out">${esc(S.memory.length?S.memory.map((m,i)=>(i+1)+". "+m).join("\n"):"(empty)")}</pre></div><button class="btn sm" type="button" id="clearMem">Clear memory</button>`; }
+  else if(nd.type!=="out"){
+    h+=`<div class="two"><label class="f"><span>Model</span><select id="fModel">${MODEL_LIST.map(([v,t])=>`<option value="${v}" ${v===c.model?"selected":""}>${t}</option>`).join("")}</select></label>
+      <label class="f"><span>Effort</span><select id="fEffort">${[["","Default"],["low","Low"],["medium","Medium"],["high","High"]].map(([v,t])=>`<option value="${v}" ${v===(c.effort||"")?"selected":""}>${t}</option>`).join("")}</select></label></div>
+      ${c.model==="custom"?`<label class="f"><span>Model ID</span><input type="text" id="fCustom" value="${esc(c.customId||"")}" placeholder="e.g. claude-haiku-4-5"></label>`:""}
+      <label class="f"><span>Prompt</span><textarea id="fPrompt" rows="8">${esc(c.prompt)}</textarea></label>
+      <p class="hint">{{input}} what flows in · {{question}} the In text${nd.type==="worker"?" · {{subtask}}":""}${g.nodes.some(n=>n.type==="debater")?" · {{debate}}":""}${g.edges.some(e=>e.loop&&e.to===nd.id)?" · {{feedback}}":""}</p>
+      ${nd.type==="evaluator"?`<label class="f"><span>Maximum rounds</span><input type="number" id="fRounds" min="1" max="5" value="${esc(c.maxRounds||3)}"></label>`:""}
+      ${nd.type==="debater"?`<label class="f"><span>Rounds (all debaters)</span><input type="number" id="fDeb" min="1" max="5" value="${esc(c.rounds||2)}"></label>`:""}
+      <div class="f"><span>Tools</span><div class="checks">${[["retrieval","Retrieval"],["calculator","Calculator"],["memory","Memory"]].map(([k,t])=>`<label><input type="checkbox" data-tool="${k}" ${(c.tools||[]).includes(k)?"checked":""}>${t}</label>`).join("")}</div></div>`;
+  }
+  h+=ioHtml(nd.id);
+  if(sb&&nd.type!=="aux") h+=`<button class="btn sm" type="button" id="delNode">Delete box</button>`;
+  P.innerHTML=h; bind(nd);
+}
+function bind(nd){
+  const on=(id,k,fn)=>{ const el=$(id); if(el) el.addEventListener("input",e=>{ setCfg(nd,k,fn?fn(e.target.value):e.target.value); render(); }); };
+  on("fLabel","label",v=>v||"Box"); on("fInput","input"); on("fPrompt","prompt"); on("fCustom","customId");
+  on("fMax","maxWords",v=>Math.max(1,parseInt(v)||1)); on("fRounds","maxRounds",v=>Math.max(1,Math.min(5,parseInt(v)||1)));
+  const fd=$("fDeb"); if(fd) fd.addEventListener("input",e=>{ const v=Math.max(1,Math.min(5,parseInt(e.target.value)||1)); graph().nodes.filter(n=>n.type==="debater").forEach(n=>setCfg(n,"rounds",v)); });
+  const fm=$("fModel"); if(fm) fm.addEventListener("change",e=>{ setCfg(nd,"model",e.target.value); render(); renderPanel(); });
+  const fe=$("fEffort"); if(fe) fe.addEventListener("change",e=>setCfg(nd,"effort",e.target.value));
+  document.querySelectorAll("[data-tool]").forEach(cb=>cb.addEventListener("change",()=>{ setCfg(nd,"tools",[...document.querySelectorAll("[data-tool]:checked")].map(x=>x.dataset.tool)); render(); }));
+  const k=$("fKnow"); if(k) k.addEventListener("input",e=>{ S.knowledge=e.target.value; save(); });
+  const cm=$("clearMem"); if(cm) cm.onclick=()=>{ S.memory=[]; save(); renderPanel(); };
+  const dn=$("delNode"); if(dn) dn.onclick=()=>{ const sb=S.sandbox; sb.nodes=sb.nodes.filter(x=>x.id!==nd.id); sb.edges=sb.edges.filter(e=>e.from!==nd.id&&e.to!==nd.id); if(sb.ring&&!sb.nodes.some(n=>n.type==="debater")) delete sb.ring; selected=null; save(); render(); renderPanel(); };
+}
+
+/* ---------- editing on the diagram (sandbox) ---------- */
+function svgPoint(evt){ const pt=svg.createSVGPoint(); pt.x=evt.clientX; pt.y=evt.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+let drag=null, link=null;
+svg.addEventListener("pointerdown",e=>{
+  if(editing&&!editing.dirty) editing=null;
+  const sb=sand(), hd=e.target.closest("[data-handle]");
+  if(sb&&hd&&!running){ link={from:hd.dataset.handle}; svg.setPointerCapture(e.pointerId); e.preventDefault(); return; }
+  const g=e.target.closest("[data-node]");
+  if(g){ selected=g.dataset.node; selEdge=null; if(sb&&!running){ const nd=S.sandbox.nodes.find(x=>x.id===selected); const p=svgPoint(e); drag={nd,dx:p.x-nd.x,dy:p.y-nd.y,moved:false}; svg.setPointerCapture(e.pointerId); } render(); renderPanel(); return; }
+  const ed=e.target.closest("[data-edge]"); if(sb&&ed){ selEdge=+ed.dataset.edge; selected=null; render(); renderPanel(); return; }
+  selected=null; selEdge=null; render(); renderPanel();
+});
+svg.addEventListener("pointermove",e=>{
+  if(drag){ const p=svgPoint(e); drag.nd.x=Math.max(drag.nd.w/2,Math.min(1000-drag.nd.w/2,p.x-drag.dx)); drag.nd.y=Math.max(drag.nd.h/2,Math.min(440-drag.nd.h/2,p.y-drag.dy)); drag.moved=true; render(); }
+  if(link){ const p=svgPoint(e); render(); const a=S.sandbox.nodes.find(x=>x.id===link.from); if(a) svg.insertAdjacentHTML("beforeend",`<path class="tmp" d="M${a.x+a.w/2},${a.y} L${p.x},${p.y}"/>`); }
+});
+svg.addEventListener("pointerup",e=>{
+  if(drag){ if(drag.moved) save(); drag=null; }
+  if(link){ const el=document.elementFromPoint(e.clientX,e.clientY), g=el&&el.closest&&el.closest("[data-node]");
+    if(g&&g.dataset.node!==link.from&&!S.sandbox.edges.some(x=>x.from===link.from&&x.to===g.dataset.node)){ S.sandbox.edges.push({from:link.from,to:g.dataset.node}); save(); }
+    link=null; render(); }
+});
+svg.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ const g=e.target.closest("[data-node]"); if(g){ selected=g.dataset.node; render(); renderPanel(); e.preventDefault(); } } });
+$("palette").addEventListener("click",e=>{
+  const b=e.target.closest("[data-add]"); if(!b||running) return; const t=b.dataset.add, sb=S.sandbox; let id; do{ id="n"+(++sb.seq); }while(sb.nodes.some(n=>n.id===id));
+  const x=690+((sb.nodes.length*150)%200), y=400;
+  sb.nodes.push(t==="in"?{id,type:"in",x,y,w:90,h:50,label:"In",cfg:{input:"Your input"}}:t==="out"?{id,type:"out",x,y,w:90,h:50,label:"Out",cfg:{}}:t==="gate"?{id,type:"gate",x,y,w:100,h:56,label:"Gate",cfg:{maxWords:60}}:L(id,x,y,t==="router"?"Router":"LLM call",{prompt:t==="router"?"Decide where this should go.\n\n{{input}}":"{{input}}"},150,t==="router"?"router":"llm"));
+  selected=id; save(); render(); renderPanel();
+});
+
+/* ---------- run ---------- */
+let sample=null, toolsOK=false;
+(async()=>{ try{ sample=window.claude&&window.claude.use?await window.claude.use("sample"):null; }catch(e){}
+  if(sample){ try{ const lim=await sample.limits(); toolsOK=!!(lim&&lim.tools); }catch(e){} } else { $("runBtn").disabled=true; $("msg").textContent="Open this page in Claude to run it."; } })();
+const ERR={not_granted:"You did not allow this page to use Claude. Reload to be asked again.",sampling_disabled:"Claude is not available for this account.",rate_limited:"Too many calls, or your usage limit is reached. Wait and try again.",session_expired:"Sign in to Claude again.",refused:"Claude declined this input. Change it and try again.",empty_completion:"Claude returned nothing. Simplify the prompt.",prompt_too_large:"The input is too long.",cancelled:"Stopped.",upstream_error:"Connection problem. Try again."};
+$("runBtn").addEventListener("click",async()=>{
+  if(running||!sample) return;
+  running=true; selEdge=null; $("runBtn").disabled=true; $("stopBtn").hidden=false; $("msg").textContent=""; $("msg").classList.remove("err");
+  const g=clone(graph()), k=key(); ctl=new AbortController(); live={steps:[]}; restore(); render(); renderRuns(); renderStats(); renderPanel();
+  const hooks={status:(id,st)=>{ status[id]=st; render(); }, hot:(a,b)=>{ hot.add(a+">"+b); render(); },
+    bubble:(id,b)=>{ if(!b) delete bubbles[id]; else { bubbles[id]=b; if(b.end){ const ref=b; setTimeout(()=>{ if(bubbles[id]===ref){ delete bubbles[id]; render(); } },1800); } } render(); },
+    label:(id,t)=>{ labels[id]=t; render(); }, step:s=>{ if(!live.steps.includes(s)) live.steps.push(s); if(selected===s.id) renderPanel(); }};
+  let res=null, err=null;
+  try{ res=await ENGINE.run(g,{sample,toolsOK,knowledge:S.knowledge,memory:S.memory,onMemory:save,signal:ctl.signal,hooks}); }catch(e){ err=e; }
+  S.seq=(S.seq||0)+1;
+  /* a run keeps everything: settings, every step with what went in and out, the output */
+  const rec={run_id:String(S.seq),date_time:new Date().toISOString(),source:sand()?"sandbox":"playground",strategy:sand()?S.sandbox.name:PRESETS[S.tab].name,strategy_version:ENGINE.version(g),
+    input:res?res.question:((g.nodes.find(n=>n.type==="in")||{cfg:{}}).cfg.input||""),models_asked:res?res.models_asked.join("; "):"",models_answered:res?res.models_answered.join("; "):"",
+    ai_output:res?res.output:"",calls:res?res.calls:live.steps.filter(s=>s.model_asked).length,tokens_est:res?res.tokens_est:0,seconds:res?res.seconds:null,error:err?(err.msg||err.code||"failed"):"",
+    settings:g.nodes.filter(n=>n.type!=="aux").map(n=>({id:n.id,label:n.label,type:n.type,model:n.cfg.model==="custom"?n.cfg.customId:n.cfg.model,effort:n.cfg.effort||"",tools:n.cfg.tools||[],prompt:n.cfg.prompt||"",maxWords:n.cfg.maxWords,maxRounds:n.cfg.maxRounds,rounds:n.cfg.rounds})),
+    steps:res?res.steps:live.steps,transcript:res?res.transcript:"",status:Object.fromEntries(Object.entries(status).filter(([a,v])=>v==="done"||v==="skipped"||v==="error")),labels:{...labels},hot:[...hot]};
+  (S.runs[k] ||= []).unshift(rec); S.runs[k]=S.runs[k].slice(0,MAXRUNS); S.view[k]=rec.run_id;
+  running=false; live=null; bubbles={}; $("runBtn").disabled=false; $("stopBtn").hidden=true; save(); refresh();
+  if(err){ $("msg").classList.add("err"); $("msg").textContent=err.msg||ERR[err.code]||ERR.upstream_error; }
+});
+$("stopBtn").addEventListener("click",()=>{ if(ctl) ctl.abort(); });
+
+/* ---------- downloads (sandbox) ---------- */
+async function download(name,data){ const m=$("msg"); m.classList.remove("err");
+  try{ const dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null; if(dl){ await dl.save({filename:name,data}); m.textContent="Saved "+name+"."; return; } }catch(e){ if(e&&e.code){ m.textContent="Not saved."; return; } }
+  try{ await navigator.clipboard.writeText(data); m.textContent="Download is not available here, so "+name+" was copied."; }catch(e){ m.textContent="Download is not available in this view."; } }
+const slug=s=>String(s||"strategy").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"strategy";
+$("dlRuns").addEventListener("click",()=>{ const L2=runsList(); if(!L2.length){ $("msg").textContent="No runs yet."; return; } download("runs-"+slug(S.sandbox.name)+".json",JSON.stringify({exported:new Date().toISOString(),strategy:S.sandbox.name,runs:L2},null,2)); });
+/* The export is saved in the page database, so "sync" in Claude Code puts it in the strategies folder.
+   Exporting again keeps the answers already filled in. */
+let dbWhy=""; async function exportDB(){ try{ const d=window.claude&&window.claude.use?await window.claude.use("db"):null; if(!d) dbWhy="the database is not available in this view"; return d; }catch(e){ dbWhy=(e&&(e.code||e.message))||"db failed"; return null; } }
+function keepFilled(oldMd,newMd){ const FILL="_(fill in)_", old={}; let box="";
+  const key=l=>{ const h=l.match(/^### (.+)/); if(h) box=h[1].trim(); else if(/^## /.test(l)) box=""; const m=l.match(/^- ([^:]+): (.*)$/); return m?[box+"|"+m[1],m[1],m[2].trim()]:null; };
+  String(oldMd||"").split("\n").forEach(l=>{ const k=key(l); if(k&&k[2]!==FILL&&k[2]) old[k[0]]=k[2]; });
+  box=""; return newMd.split("\n").map(l=>{ const k=key(l); return k&&k[2]===FILL&&old[k[0]]?"- "+k[1]+": "+old[k[0]]:l; }).join("\n"); }
+async function saveExport(e){ const db=await exportDB(); if(!db) return false;
+  try{ await db.doc("exports/"+e.key).set({file:e.name,strategy:e.strategy,base:e.base,exported:e.exported,saved:new Date().toISOString(),markdown:e.md}); return true; }catch(err){ dbWhy=(err&&(err.code||err.message))||"write failed"; return false; } }
+$("exportBtn").addEventListener("click",async()=>{ if(running) return; const m=$("msg"); m.classList.remove("err");
+  const key=slug(S.sandbox.name), e={key,name:"strategy-"+key+".md",strategy:S.sandbox.name,base:S.sandbox.base||"",exported:new Date().toISOString(),md:strategyMarkdown()};
+  const db=await exportDB();
+  if(!db){ m.classList.add("err"); m.textContent="Not saved for sync ("+dbWhy+"). Download instead."; download(e.name,e.md); return; }
+  try{ const old=await db.doc("exports/"+key).get(); if(old.exists) e.md=keepFilled((old.data()||{}).markdown,e.md); }catch(err){}
+  if(!await saveExport(e)){ m.classList.add("err"); m.textContent="Not saved ("+dbWhy+")."; return; }
+  editing=e; selected=null; selEdge=null; render(); renderPanel();
+  m.textContent="Exported "+e.name+". Fill it in here and save, then type sync in Claude Code."; });
+
+/* the strategy file: only what is needed. The boxes are filled in; the student writes the workflow parts. */
+function strategyMarkdown(){
+  const g=S.sandbox, by=Object.fromEntries(g.nodes.map(n=>[n.id,n])), FILL="_(fill in)_";
+  const isAgent=n=>!["in","out","aux"].includes(n.type);
+  const flow=g.edges.filter(e=>by[e.from]&&by[e.to]&&by[e.from].type!=="aux"&&by[e.to].type!=="aux"&&!(by[e.from].type==="debater"&&by[e.to].type==="debater"));
+  const sends=id=>flow.filter(e=>e.from===id).map(e=>by[e.to].label+(e.loop?" (line: "+(e.label||"Rejected")+", goes back)":(e.label?" (line: "+e.label+")":""))).join(", ")||"nothing";
+  const deb=g.nodes.filter(n=>n.type==="debater");
+  const box=n=>{ const c=n.cfg; if(n.type==="gate") return "### "+n.label+"\n- Type: gate (a check in code, no LLM): passes when the text has at most "+(c.maxWords||60)+" words; when it fails, the flow follows the line Fail\n- Tab of my dashboard: "+FILL+"\n- Sends to: "+sends(n.id)+"\n";
+    return "### "+n.label+"\n- Type: "+n.type+"\n- Tab of my dashboard: "+FILL+"\n- Model: `"+(c.model==="custom"?c.customId:c.model)+"`, effort: "+(c.effort||"default")+((c.tools||[]).length?", tools: "+c.tools.join(", "):"")
+      +(n.type==="evaluator"?", maximum rounds: "+(c.maxRounds||3):"")+(n.type==="debater"?", rounds: "+(c.rounds||2):"")+"\n- Sends to: "+sends(n.id)+"\n- Prompt:\n\n```text\n"+c.prompt+"\n```\n"; };
+  const ins=g.nodes.filter(n=>n.type==="in");
+  return "# Strategy: "+g.name+"\n\n"+(g.base?"Based on: "+PRESETS[g.base].name+". ":"")+"Exported "+new Date().toLocaleDateString()+". Fill in every "+FILL+" in this file. Then type sync in Claude Code: the file goes to the folder of its strategy.\n\n"
+    +"## My workflow\n\n- Workflow: "+FILL+"\n- Decision at the end: "+FILL+"\n- Possible outcomes: "+FILL+"\n- Why this strategy fits: "+FILL+"\n- Who decides (the AI advises, or the AI decides and I can override): "+FILL+"\n- What from my dashboard goes into In: "+FILL+"\n\n"
+    +"## Boxes\n\n"+ins.map(n=>"### "+n.label+"\n- Type: in\n- Sends to: "+sends(n.id)+"\n").join("\n")+"\n"+g.nodes.filter(isAgent).map(box).join("\n")
+    +(deb.length>1?"\nThe debaters ("+deb.map(n=>n.label).join(", ")+") answer each other in every round.\n":"")
+    +(g.nodes.some(n=>(n.cfg.tools||[]).includes("retrieval"))?"\n## Notes for retrieval\n\n```text\n"+S.knowledge+"\n```\n":"");
+}
+
+refresh();
+})();
+</script>
