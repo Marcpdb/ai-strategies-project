@@ -13,6 +13,18 @@ Used by the `SKILL.md` in every `3-strategies/<strategy>/evaluation/<test>/` fol
 
 Comparing the strategies with each other (CSA) and the conclusion are in `4-compare-and-conclude/`.
 
+## Every test, for every strategy
+
+Each of the student's 3 strategies goes through **every** test folder: 1 to 5, and 6 for the strategies with more than one LLM box (single call has no folder 6). Start with `1-baseline-stability`: every other test is compared with it. The final comparison in `4-compare-and-conclude/` puts the three strategies side by side, test by test, so a missing test leaves a hole in it.
+
+**The same change for the three strategies.** A test compares strategies only when they got the same change. At set up, read the `plan.md` of the same test in the other strategies first. If one exists, propose that change again:
+
+- `3-vary-fact` and `4-vary-boundary`: the same test case, with the same fact changed, or the same information missing or conflicting. These changes are in the case data, so they carry over as they are.
+- `5-compare-models`: the same switch, for example every LLM box from Haiku to Sonnet.
+- `2-vary-wording` and `6-compare-agents`: the prompts differ per strategy, so use the same kind of change: the same reordering, or the same wrong fact, in the box that decides.
+
+Say in `plan.md` which strategy's plan it follows. If the student wants a different change, write down why.
+
 ## The same three moves in every folder
 
 ### 1. Set up (the student says "set up")

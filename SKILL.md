@@ -63,7 +63,9 @@ A short list:
 - playground link: yes or no;
 - `2-manual-dashboard/dashboard.html`: yes or no;
 - `3-strategies/test-cases.md`: how many test cases;
-- per strategy that has an export: export filled in (any _(fill in)_ left?), dashboard link, runs at the last sync, which evaluation folders have a `plan.md` and a `findings.md`;
+- per strategy that has an export: export filled in (any _(fill in)_ left?), dashboard link, runs at the last sync;
+- the evaluation, as one table: the strategies as rows, the tests (1 to 6) as columns, and in each cell `plan`, `runs` (how many), `findings`, or `-` (not started). Folder 6 is `n/a` for single call. Every strategy does every test (`reference/evaluation.md`);
+- `4-compare-and-conclude/`: `comparison.md` and `conclusion.md`, yes or no;
 - the next step.
 
 Strategies without an export are not listed: the student chose others.
