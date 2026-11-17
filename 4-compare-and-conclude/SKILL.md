@@ -7,11 +7,13 @@ description: "Compares the student's strategies on the same input (CSA) and help
 
 Two parts. Both work only from the logs and findings in `3-strategies/`; run "sync" first (main `SKILL.md`).
 
+**Only when every chosen strategy is done.** The chosen strategies are those with an `export/strategy.md`. Each needs a dashboard, every test of it with 3 runs in `dashboard/logs/runs.json`, and `findings.md` in every test folder. If one is not done, do not compare or conclude: say which strategy is missing what, and what the student does next ("build the chain dashboard", the tests still to run, "findings for chain").
+
 ## 1. Compare the strategies (CSA): "compare"
 
 How do the strategies differ on the same input?
 
-- Only for strategies whose evaluation is complete (every test with its 3 runs, and `findings.md` written). Take their logs: `3-strategies/<strategy>/dashboard/logs/runs.csv`. Put them together in `all-runs.csv` here (same columns; the `strategy` column tells them apart).
+- Take the logs of every chosen strategy: `3-strategies/<strategy>/dashboard/logs/runs.csv`. Put them together in `all-runs.csv` here (same columns; the `strategy` column tells them apart).
 - Check that the strategies used the same input for their baseline runs (`input`). If not, say which differ: those cannot be compared directly.
 - Write `comparison.md`:
   - one table per test (baseline, wording, fact, boundary, models, agents): strategies as rows; the outcomes of the 3 runs, how many gave the same outcome, the student's verdicts, and for boundary how often uncertainty was flagged and things were made up;
