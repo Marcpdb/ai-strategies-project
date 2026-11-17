@@ -33,6 +33,17 @@ Then write `findings.md` in every test folder of this strategy, in plain English
 
 Each test folder's `SKILL.md` says what its findings look at in particular.
 
+## 3. What comes next (always say this after findings)
+
+The student evaluates every strategy they chose: every strategy with an `export/strategy.md`. After writing the findings of one strategy, look at the others and tell the student the next step in one or two lines:
+
+- a strategy with an export but no dashboard yet: "build the <strategy> dashboard";
+- a strategy with a dashboard whose tests are not all done: which tests still need runs, in that dashboard;
+- a strategy whose tests are done but without findings: "findings for <strategy>";
+- every strategy done, with findings: "compare" (`4-compare-and-conclude/`).
+
+Never suggest comparing or concluding while a chosen strategy is not done.
+
 ## Rules
 
 - One change per test; everything else stays the same as the baseline. The dashboard does this: do not change prompts or models by hand during the evaluation.
