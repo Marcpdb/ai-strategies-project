@@ -20,7 +20,7 @@ The student adds AI strategies to the final decision of their own workflow dashb
     dashboard/           the AI dashboard: dashboard.html, link.md, logs/
     evaluation/<test>/   one folder per test, each with its own SKILL.md
 4-compare-and-conclude/  comparing strategies, and the conclusion
-reference/               shared instructions, the dashboard template, runs_to_csv.py
+reference/               shared instructions and the dashboard template
 ```
 
 Never change or delete what the student made: `2-manual-dashboard/`, filled-in `strategy.md` files, `logs/`, `plan.md`, `findings.md`.
@@ -28,12 +28,12 @@ Never change or delete what the student made: `2-manual-dashboard/`, filled-in `
 ## "start"
 
 1. **The playground.** If `1-playground/link.md` has a link, give it. Otherwise publish `1-playground/playground.html` as the student's own artifact with the Artifact tool:
-   - `capabilities`: `{"sample": {}, "downloads": true, "db": {"rules": [{"path": "exports", "read": "admin", "write": "owner"}]}, "user": {}}`;
+   - `capabilities`: `{"sample": {}, "downloads": true}`;
    - `icon`: `flow`; description: "My AI Strategy Playground."
 
    Write the link to `1-playground/link.md`.
 2. **Check** as under "status", and say what is missing.
-3. Tell the student the next step in one or two lines: learn the seven strategies in the Playground tab; in the Sandbox load, change and run the ones they choose for the final decision of their workflow; export each one, fill in every _(fill in)_ in the file that opens, save, and type "sync".
+3. Tell the student the next step in one or two lines: learn the seven strategies in the Playground tab; in the Sandbox load, change and run the ones they choose for the final decision of their workflow; export each one, fill in every _(fill in)_ in the file that opens, click Download, and type "sync".
 
 ## The manual dashboard
 
@@ -47,15 +47,12 @@ Read the other files only as background (what the data mean), and never change t
 
 ## "sync"
 
-Do all parts, then say in a few lines what is new and where it went.
+The playground and the dashboards are web pages: they cannot write into this folder. The student downloads files from them (the browser puts them in the Downloads folder), and "sync" moves them here. Look in `~/Downloads` for the files below, take the newest of each name (the browser adds " (1)", " (2)" to repeated downloads), move it, and remove the older copies of that name from Downloads. Then say in a few lines what moved where, and what is still missing.
 
-1. **Exports.** Read the `exports` collection of the playground (ArtifactData `list`, the link in `1-playground/link.md`). Each document has `file`, `strategy`, `base`, `saved` and `markdown`. The strategy folder follows from `base`: augmented → `single-call`, chain → `chain`, routing → `routing`, parallel → `parallel`, orchestrator → `orchestrator`, evaluator → `critic`, debate → `debate`. If `base` is empty (the sandbox started empty), ask the student which folder it belongs to. Write `markdown` to `3-strategies/<folder>/export/strategy.md`:
-   - no file yet, or the file is still exactly what the last sync wrote (see `export/.sync.json`): write it;
-   - the student changed the file since: do not overwrite it. Write `export/strategy.new.md` and say which lines differ.
-
-   Keep `export/.sync.json` up to date: the `saved` time and the exact text the last sync wrote. Two exports for one folder: ask which one to use.
-2. **Logs.** For every `link.md` under `3-strategies/` (the strategy dashboards and the test dashboards), read the `runs` collection of that dashboard (ArtifactData `list`, all pages; the `out_dir` option keeps large runs out of the chat). Write `logs/runs.json` next to that `link.md`'s folder as `{"strategy": ..., "test": ..., "dashboard": <link>, "synced": <ISO time>, "runs": [...]}`, sorted by `date_time`, then run `python3 reference/runs_to_csv.py <that runs.json>`. For a strategy dashboard the logs go to `dashboard/logs/`; for a test, to `evaluation/<test>/logs/`.
-3. **Next step.** For each strategy with a new export: tell the student that the strategy's `SKILL.md` builds its dashboard next ("build the parallel dashboard").
+1. **Strategy files** `strategy-<name>.md` (from Export in the sandbox). The folder follows from the line "Based on: <strategy>." in the file: Single call → `single-call`, Chain → `chain`, Routing → `routing`, Parallel → `parallel`, Orchestrator → `orchestrator`, Critic → `critic`, Debate → `debate`. No such line (the sandbox started empty): ask the student which strategy it is. Move it to `3-strategies/<folder>/export/strategy.md`. If that file exists and is different, do not overwrite it: ask the student which one to keep, and show which lines differ. Two new files for one strategy: ask which one.
+2. **Run logs** `runs-<strategy>-<test>.csv` and `.json` (from the two download buttons in a dashboard). `<test>` is `baseline` for the strategy's own dashboard, and otherwise the test: `wording` → `evaluation/2-vary-wording/`, `fact` → `3-vary-fact/`, `boundary` → `4-vary-boundary/`, `model` → `5-compare-models/`, `agents` → `6-compare-agents/`. Baseline logs go to `3-strategies/<strategy>/dashboard/logs/`, test logs to `3-strategies/<strategy>/evaluation/<test folder>/logs/`, as `runs.csv` and `runs.json`. A newer download replaces the older one: the dashboard always downloads every run so far.
+3. **Missing:** a dashboard with a link but no log yet, or a log whose newest run is older than the student's last session. Remind them to download both files from the decision tab of that dashboard.
+4. **Next step.** For each strategy with a new strategy file: the strategy's `SKILL.md` builds its dashboard next ("build the parallel dashboard").
 
 ## "status"
 

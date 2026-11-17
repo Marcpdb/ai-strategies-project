@@ -24,14 +24,14 @@ Show the student one short mapping and wait for their yes:
 
 ## 3. Build
 
-Start from `reference/dashboard-template.html`: a finished dashboard for the invented dinner example, with the placeholders `/*__ENGINE__*/`, `/*__STRATEGY_JSON__*/`, `/*__STEP_OF__*/` and `/*__VARIATION__*/`. Replace its dinner content (title, tabs, data, `caseText()`, `TESTS`, how the outcome is read) with the student's dashboard. Keep everything else: the flow, the agent cards, the conversation, the run controls, the decision tab, the run log and the code that saves every run for sync.
+Start from `reference/dashboard-template.html`: a finished dashboard for the invented dinner example, with the placeholders `/*__ENGINE__*/`, `/*__STRATEGY_JSON__*/`, `/*__STEP_OF__*/` and `/*__VARIATION__*/`. Replace its dinner content (title, tabs, data, `caseText()`, `TESTS`, how the outcome is read) with the student's dashboard. Keep everything else: the flow, the agent cards, the conversation, the run controls, the decision tab and the run log with its two downloads (their file names tell "sync" where the log belongs).
 
 1. **Title:** "<dashboard name> · <strategy name>". Keep the student's tabs, data and content.
 2. **Engine, copied verbatim:** the block from `/* ===== ENGINE START` to `/* ENGINE END */` out of `1-playground/playground.html`. Do not write your own strategy logic.
 3. **Strategy, copied verbatim:** `STRATEGY` from the "Boxes" section, prompts exactly as written; the confirmed mapping in `STEP_OF`; the test cases in `TESTS`. Do not change prompts, models, effort or tools unless the student asks.
 4. **Variation:** `{type:"baseline",what:""}` for the strategy's own dashboard.
 5. Write the page to `<strategy>/dashboard/dashboard.html`.
-6. **Publish** it with the Artifact tool: `capabilities` `{"sample": {}, "downloads": true, "db": {"rules": [{"path": "runs", "read": "admin", "write": "owner"}]}, "user": {}}`, a short generic `icon`. Write the link to `<strategy>/dashboard/link.md`. To change it later, edit `dashboard.html` and publish again with the link as `url`, so the link and the saved runs stay.
+6. **Publish** it with the Artifact tool: `capabilities` `{"sample": {}, "downloads": true}`, a short generic `icon`. Write the link to `<strategy>/dashboard/link.md`. To change it later, edit `dashboard.html` and publish again with the link as `url`, so the link stays.
 
 ## 4. Hand over
 

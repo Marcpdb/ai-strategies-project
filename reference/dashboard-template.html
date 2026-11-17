@@ -180,14 +180,6 @@ const KEY="ai-dash-"+STRATEGY.version;
 const ST={tab:"guests",tc:0,budget:30,minutes:45,kitchen:TESTS[0].kitchen,rchange:"",times:1,log:[],review:null,seq:0};
 try{ Object.assign(ST,JSON.parse(localStorage.getItem(KEY)||"{}")); }catch(e){}
 const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(ST)); }catch(e){} };
-/* every run, with its coding, also goes to the page database, so "sync" in Claude Code can put the log in the student's folder */
-let dbP=null; const getDB=()=>dbP||(dbP=(async()=>{ try{ return window.claude&&window.claude.use?await window.claude.use("db"):null; }catch(e){ return null; } })());
-const dbNote=t=>{ const m=document.getElementById("msg"); if(m){ m.classList.add("err"); m.textContent="Run not saved for sync ("+t+"). Download the log instead."; } };
-async function pushRun(l){ if(!l) return; const db=await getDB(); if(!db){ dbNote("the database is not available in this view"); return; }
-  if(!l.db_id) { l.db_id=l.run_id+"-"+Date.parse(l.date_time); save(); }
-  const doc={...l}; delete doc.status; delete doc.labels; delete doc.hot;
-  try{ await db.doc("runs/"+l.db_id).set(doc); }
-  catch(e){ if(e&&e.code==="invalid_argument"){ try{ doc.steps=[]; doc.steps_left_out="too large for the database; download the JSON from the dashboard"; await db.doc("runs/"+l.db_id).set(doc); }catch(e2){ dbNote((e2&&(e2.code||e2.message))||"write failed"); } } else dbNote((e&&(e.code||e.message))||"write failed"); } }
 
 /* ---- what the flow shows: a live run or the selected saved run ---- */
 let status={}, labels={}, bubbles={}, hot=new Set(), running=false, ctl=null, live=null;
@@ -270,9 +262,9 @@ function renderPanel(){
   if($("acc")) $("acc").onclick=()=>verdict("accepted","","");
   if($("ovrBtn")) $("ovrBtn").onclick=()=>{ const o=$("ovr").value; if(!o){ $("ovr").focus(); return; } verdict("overridden",o,$("why").value); };
   document.querySelectorAll("[data-review]").forEach(b=>b.onclick=()=>{ ST.review=+b.dataset.review; save(); restore(ST.log[ST.review]); render(); });
-  document.querySelectorAll("[data-code]").forEach(el=>el.addEventListener("change",()=>{ const l=ST.log[ST.review]; if(l){ l[el.dataset.code]=el.value; save(); pushRun(l); if(el.tagName==="SELECT") renderPanel(); } }));
-  if($("csv")) $("csv").onclick=()=>download("run-log-"+slug(STRATEGY.strategy)+".csv",csv());
-  if($("json")) $("json").onclick=()=>download("run-log-"+slug(STRATEGY.strategy)+".json",JSON.stringify({strategy:STRATEGY.strategy,version:STRATEGY.version,runs:ST.log},null,2));
+  document.querySelectorAll("[data-code]").forEach(el=>el.addEventListener("change",()=>{ const l=ST.log[ST.review]; if(l){ l[el.dataset.code]=el.value; save(); if(el.tagName==="SELECT") renderPanel(); } }));
+  if($("csv")) $("csv").onclick=()=>download(logName()+".csv",csv());
+  if($("json")) $("json").onclick=()=>download(logName()+".json",JSON.stringify({strategy:STRATEGY.strategy,version:STRATEGY.version,variation:VARIATION,runs:ST.log.map(l=>{ const r={...l}; delete r.status; delete r.labels; delete r.hot; return r; })},null,2));
 }
 function adviceHtml(){
   const l=ST.review!=null?ST.log[ST.review]:null;
@@ -292,7 +284,7 @@ function logHtml(){
     <div class="tablebox"><table><thead><tr><th>Run</th><th>Time</th><th>Test case</th><th>Changed</th><th>AI outcome</th><th>Your choice</th><th>Verdict</th><th></th></tr></thead><tbody>${ST.log.map((l,i)=>`<tr><td>${esc(l.run_id)}</td><td>${esc(new Date(l.date_time).toLocaleString([],{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}))}</td><td>${esc(l.test_case)}</td><td class="cut">${esc(l.what_changed)}</td><td>${esc(l.error?"error":l.ai_outcome)}</td><td>${esc(l.user_choice?(l.user_choice+(l.override_to?": "+l.override_to:"")):"open")}</td><td>${esc(l.verdict||"-")}</td><td><button class="btn sm" type="button" data-review="${i}">${ST.review===i?"Shown":"Show"}</button></td></tr>`).reverse().join("")||`<tr><td colspan="8" class="hint">No runs yet.</td></tr>`}</tbody></table></div>
     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="csv">Download log (CSV)</button><button class="btn sm" type="button" id="json">Download log with all steps (JSON)</button></div>`;
 }
-function verdict(c,to,why){ const l=ST.log[ST.review]; if(!l) return; Object.assign(l,{user_choice:c,override_to:to,override_reason:why}); save(); pushRun(l); renderPanel(); }
+function verdict(c,to,why){ const l=ST.log[ST.review]; if(!l) return; Object.assign(l,{user_choice:c,override_to:to,override_reason:why}); save(); renderPanel(); }
 function renderControls(){
   $("tc").innerHTML=TESTS.map((t,i)=>`<option value="${i}" ${ST.tc===i?"selected":""}>${esc(t.name)}</option>`).join("")+`<option value="-1" ${ST.tc===-1?"selected":""}>own input (step 1)</option>`;
   $("rchange").value=ST.rchange||""; $("times").value=String(ST.times);
@@ -323,7 +315,7 @@ async function runOnce(){
     ai_output:res?res.output:"",ai_outcome:res?outcomeOf(res.output):"",user_choice:"",override_to:"",override_reason:"",verdict:"",uncertainty_flagged:"",fabricated:"",coder_note:"",
     calls:res?res.calls:0,tokens_est:res?res.tokens_est:0,seconds:res?res.seconds:null,error:err?(err.msg||err.code||"failed"):"",
     steps:res?res.steps:live.steps,status:{...status},labels:{...labels},hot:[...hot]};
-  ST.log.push(rec); ST.review=ST.log.length-1; live=null; bubbles={}; save(); pushRun(rec);
+  ST.log.push(rec); ST.review=ST.log.length-1; live=null; bubbles={}; save();
   if(err) throw err;
 }
 $("runBtn").addEventListener("click",async()=>{
@@ -337,6 +329,8 @@ $("stopBtn").addEventListener("click",()=>{ if(ctl) ctl.abort(); });
 /* ---- downloads in the log format ---- */
 const COLS=["run_id","date_time","source","strategy","strategy_version","test_case","input","variation_type","what_changed","repeat_no","models_asked","models_answered","ai_output","ai_outcome","user_choice","override_to","override_reason","verdict","uncertainty_flagged","fabricated","coder_note","calls","tokens_est","seconds","error"];
 function csv(){ const q=v=>{ const s=String(v==null?"":v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }; return [COLS.join(",")].concat(ST.log.map(l=>COLS.map(c=>q(l[c])).join(","))).join("\n"); }
+/* the file name tells "sync" where the log belongs: runs-<strategy>-<test>.csv / .json */
+const logName=()=>"runs-"+slug(STRATEGY.strategy)+"-"+slug(VARIATION.type||"baseline");
 const slug=s=>String(s||"strategy").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 async function download(name,data){ try{ const dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null; if(dl){ await dl.save({filename:name,data}); $("msg").textContent="Saved "+name+"."; return; } }catch(e){ if(e&&e.code){ $("msg").textContent="Not saved."; return; } }
   try{ await navigator.clipboard.writeText(data); $("msg").textContent="Download is not available here, so the file was copied."; }catch(e){ $("msg").textContent="Download is not available in this view."; } }

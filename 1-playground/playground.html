@@ -431,10 +431,10 @@ function renderPanel(){
   if(sb&&editing){ const left=(editing.md.match(/_\(fill in\)_/g)||[]).length;
     P.innerHTML=`<div><h2>${esc(editing.name)}</h2><div class="kind">${left?"Replace every _(fill in)_ with your own answer: "+left+" left.":"Everything is filled in."}</div></div>
       <label class="f"><span>Your strategy file</span><textarea id="edMd" rows="26" spellcheck="true">${esc(editing.md)}</textarea></label>
-      <div style="display:flex;gap:8px"><button class="btn run" type="button" id="edSave">Save</button><button class="btn" type="button" id="edClose">Close</button></div>`;
-    $("edMd").oninput=e=>{ editing.md=e.target.value; editing.dirty=true; };
-    $("edSave").onclick=async()=>{ const m=$("msg"); m.classList.remove("err"); const ok=await saveExport(editing); if(ok){ editing.dirty=false; m.textContent="Saved "+editing.name+". Type sync in Claude Code to add it to your folder."; } else { m.classList.add("err"); m.textContent="Not saved ("+dbWhy+")."; } renderPanel(); };
-    $("edClose").onclick=()=>{ if(editing.dirty&&!$("edClose").dataset.sure){ $("edClose").dataset.sure="1"; $("edClose").textContent="Close without saving"; return; } editing=null; renderPanel(); };
+      <div style="display:flex;gap:8px"><button class="btn run" type="button" id="edSave">Download</button><button class="btn" type="button" id="edClose">Close</button></div>`;
+    $("edMd").oninput=e=>{ editing.md=e.target.value; editing.dirty=true; (S.drafts ||= {})[editing.name]=editing.md; save(); };
+    $("edSave").onclick=async()=>{ await download(editing.name,editing.md); editing.dirty=false; const m=$("msg"); if(/^Saved/.test(m.textContent)) m.textContent+=" Then type sync in Claude Code: it moves the file from your Downloads folder to the folder of its strategy."; renderPanel(); };
+    $("edClose").onclick=()=>{ if(editing.dirty&&!$("edClose").dataset.sure){ $("edClose").dataset.sure="1"; $("edClose").textContent="Close without downloading"; return; } editing=null; renderPanel(); };
     return; }
   if(sb&&selEdge!=null&&g.edges[selEdge]){ const e=g.edges[selEdge];
     P.innerHTML=`<h2>Line</h2><label class="f"><span>Label (a gate follows the line labelled “Fail” when it fails)</span><input type="text" id="eLabel" value="${esc(e.label||"")}"></label><button class="btn" type="button" id="delEdge">Remove this line</button>`;
@@ -537,23 +537,16 @@ async function download(name,data){ const m=$("msg"); m.classList.remove("err");
   try{ await navigator.clipboard.writeText(data); m.textContent="Download is not available here, so "+name+" was copied."; }catch(e){ m.textContent="Download is not available in this view."; } }
 const slug=s=>String(s||"strategy").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"strategy";
 $("dlRuns").addEventListener("click",()=>{ const L2=runsList(); if(!L2.length){ $("msg").textContent="No runs yet."; return; } download("runs-"+slug(S.sandbox.name)+".json",JSON.stringify({exported:new Date().toISOString(),strategy:S.sandbox.name,runs:L2},null,2)); });
-/* The export is saved in the page database, so "sync" in Claude Code puts it in the strategies folder.
-   Exporting again keeps the answers already filled in. */
-let dbWhy=""; async function exportDB(){ try{ const d=window.claude&&window.claude.use?await window.claude.use("db"):null; if(!d) dbWhy="the database is not available in this view"; return d; }catch(e){ dbWhy=(e&&(e.code||e.message))||"db failed"; return null; } }
+/* Export: the file opens here to be filled in, then it is downloaded. "sync" in Claude Code moves it from Downloads
+   to the folder of its strategy. Exporting the same strategy again keeps the answers already filled in (kept in this browser). */
 function keepFilled(oldMd,newMd){ const FILL="_(fill in)_", old={}; let box="";
   const key=l=>{ const h=l.match(/^### (.+)/); if(h) box=h[1].trim(); else if(/^## /.test(l)) box=""; const m=l.match(/^- ([^:]+): (.*)$/); return m?[box+"|"+m[1],m[1],m[2].trim()]:null; };
   String(oldMd||"").split("\n").forEach(l=>{ const k=key(l); if(k&&k[2]!==FILL&&k[2]) old[k[0]]=k[2]; });
   box=""; return newMd.split("\n").map(l=>{ const k=key(l); return k&&k[2]===FILL&&old[k[0]]?"- "+k[1]+": "+old[k[0]]:l; }).join("\n"); }
-async function saveExport(e){ const db=await exportDB(); if(!db) return false;
-  try{ await db.doc("exports/"+e.key).set({file:e.name,strategy:e.strategy,base:e.base,exported:e.exported,saved:new Date().toISOString(),markdown:e.md}); return true; }catch(err){ dbWhy=(err&&(err.code||err.message))||"write failed"; return false; } }
-$("exportBtn").addEventListener("click",async()=>{ if(running) return; const m=$("msg"); m.classList.remove("err");
-  const key=slug(S.sandbox.name), e={key,name:"strategy-"+key+".md",strategy:S.sandbox.name,base:S.sandbox.base||"",exported:new Date().toISOString(),md:strategyMarkdown()};
-  const db=await exportDB();
-  if(!db){ m.classList.add("err"); m.textContent="Not saved for sync ("+dbWhy+"). Download instead."; download(e.name,e.md); return; }
-  try{ const old=await db.doc("exports/"+key).get(); if(old.exists) e.md=keepFilled((old.data()||{}).markdown,e.md); }catch(err){}
-  if(!await saveExport(e)){ m.classList.add("err"); m.textContent="Not saved ("+dbWhy+")."; return; }
-  editing=e; selected=null; selEdge=null; render(); renderPanel();
-  m.textContent="Exported "+e.name+". Fill it in here and save, then type sync in Claude Code."; });
+$("exportBtn").addEventListener("click",()=>{ if(running) return; const name="strategy-"+slug(S.sandbox.name)+".md";
+  editing={name,md:keepFilled((S.drafts||{})[name],strategyMarkdown())}; (S.drafts ||= {})[name]=editing.md; save();
+  selected=null; selEdge=null; render(); renderPanel();
+  const m=$("msg"); m.classList.remove("err"); m.textContent="Fill in every _(fill in)_ in the file on the right, then click Download."; });
 
 /* the strategy file: only what is needed. The boxes are filled in; the student writes the workflow parts. */
 function strategyMarkdown(){

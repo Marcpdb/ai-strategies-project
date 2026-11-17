@@ -1,6 +1,6 @@
 # Run log format (the same in every dashboard)
 
-One row per run, written by every dashboard (`source` = dashboard), so students can put the CSV files of their three dashboards together in one sheet. Every run is also saved in the dashboard's database; "sync" writes `logs/runs.json` and `logs/runs.csv` from it. The JSON download has the same fields plus `steps`: every step of the run with what went in, what came out, the model asked for, the model that answered, and the time. (The sandbox keeps its last 30 runs with the same fields and steps, and downloads them as JSON.)
+One row per run, written by every dashboard (`source` = dashboard), so students can put the CSV files of their three dashboards together in one sheet. The two downloads are named `runs-<strategy>-<test>.csv` and `.json`; "sync" moves them to the right `logs/` folder. The JSON download has the same fields plus `steps`: every step of the run with what went in, what came out, the model asked for, the model that answered, and the time. (The sandbox keeps its last 30 runs with the same fields and steps, and downloads them as JSON.)
 
 The columns follow the four steps of the AI evaluation.
 
