@@ -7,7 +7,7 @@ description: "Evaluation test 'Decisive fact' for the Routing strategy. Use when
 
 **Question.** Vary (counterfactual prompting): does changing one decisive fact in the input change the outcome?
 
-**How it runs.** The **Fact** button next to Run in the Routing dashboard (`../../dashboard/`), 3 runs. Nothing to set up by hand. `variation_type` in the log: `fact`.
+**How it runs.** Choose **Fact** in the Evaluation test dropdown of the Routing dashboard (`../../dashboard/`) and click Run test: 3 runs. Nothing to set up by hand. `variation_type` in the log: `fact`.
 
 **What changes.** One extra call changes one fact in the input that should change the advice (a budget, a size, a date, a requirement). The prompts stay as they are. The same changed input is used in all 3 runs.
 

@@ -1,6 +1,6 @@
 # How the evaluation works
 
-Used by the `SKILL.md` in every `3-strategies/<strategy>/evaluation/<test>/` folder. The evaluation is run from the strategy's own dashboard: next to **Run** there is one button per test. Each test makes **one** change automatically (with an extra prompt the student can read and edit before the first run), runs **3 times** on the same input, and logs everything. Nothing is set up by hand, and there are no separate test dashboards.
+Used by the `SKILL.md` in every `3-strategies/<strategy>/evaluation/<test>/` folder. The evaluation is run from the strategy's own dashboard: next to **Run** (top right) there is a small dropdown with the tests and a **Run test** button. Each test makes **one** change automatically (with an extra prompt the student can read and edit before the first run), runs **3 times** on the same input, and logs everything. Nothing is set up by hand, and there are no separate test dashboards.
 
 | Folder | Button | Step | Question | What the button changes |
 |---|---|---|---|---|
@@ -17,7 +17,7 @@ Comparing the strategies with each other (CSA) and the conclusion are in `4-comp
 
 ## 1. Run (in the dashboard)
 
-The student clicks each test button, reads the extra prompt (and may change it before the first run of that test), and clicks Run. Each test runs 3 times. On the last tab they code every run: verdict, flags uncertainty, makes things up, and a note. When every test has 3 runs, the dashboard says so. They download both log files (CSV and JSON) and type "sync": the files go to `../../dashboard/logs/` as `runs.csv` and `runs.json`.
+The student picks each test in the dropdown, may open the line under it to read or change the extra prompt (before the first run of that test), and clicks **Run test**. Each test runs 3 times. The advice of the run shown is under the flow. When every test has 3 runs, the dashboard says so. They click **Download log** (CSV and JSON) and type "sync": the files go to `../../dashboard/logs/` as `runs.csv` and `runs.json`. Nothing is coded in the dashboard: the findings do that.
 
 ## 2. Findings (the student says "findings")
 
@@ -26,9 +26,13 @@ The student clicks each test button, reads the extra prompt (and may change it b
 Then write `findings.md` in every test folder of this strategy, in plain English, short:
 
 - **What was tested:** the question, the change as logged (`what_changed`, and for an extra call `extra_prompt` and `extra_output`), the dates, the input, and the models that actually answered (`models_answered`).
-- **Runs:** a table: run, outcome (`ai_outcome`), the student's coding (verdict, uncertainty flagged, fabricated).
+- **Runs, coded:** a table: run, outcome (`ai_outcome`), and your coding of each run from its `ai_output`, `input` and `steps`:
+  - **verdict:** correct, partly, wrong or unsure, judged against the input and the workflow in `../../export/strategy.md`, with one line why;
+  - **flags uncertainty:** yes or no, with the sentence that shows it, quoted word for word;
+  - **makes things up:** yes or no: a fact in the output that is not in the input, quoted word for word.
+  Mark the coding as Claude's, and invite the student to check it and change what they disagree with.
 - **Compared with the baseline:** the baseline runs next to them (not in folder 1). Say only what the log shows: how many runs gave the same outcome, where the outcome changed.
-- **Open:** runs that are not coded yet, runs with an error. Ask the student to code them; never code runs yourself.
+- **Open:** runs with an error, and runs you could not judge (say why).
 - **The student's conclusion:** an empty section with the folder's question. The student writes it; offer to help them phrase it, never write it for them.
 
 Each test folder's `SKILL.md` says what its findings look at in particular.

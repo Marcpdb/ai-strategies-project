@@ -7,7 +7,7 @@ description: "Evaluation test 'Prompt wording' for the Critic strategy. Use when
 
 **Question.** Vary (systematic prompt variation): does changing the order or wording of the prompts change the outcome?
 
-**How it runs.** The **Wording** button next to Run in the Critic dashboard (`../../dashboard/`), 3 runs. Nothing to set up by hand. `variation_type` in the log: `wording`.
+**How it runs.** Choose **Wording** in the Evaluation test dropdown of the Critic dashboard (`../../dashboard/`) and click Run test: 3 runs. Nothing to set up by hand. `variation_type` in the log: `wording`.
 
 **What changes.** One extra call rewords every prompt of the strategy, with the same meaning, the same placeholders and the same `Advice:` line. The reworded prompts are the same in all 3 runs. The student can edit the extra prompt before the first run.
 

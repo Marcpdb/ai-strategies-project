@@ -7,7 +7,7 @@ description: "Evaluation test 'Agent interaction' for the Routing strategy. Use 
 
 **Question.** Compare (ISIA, multi-agent only): do the boxes influence each other, and do errors spread?
 
-**How it runs.** The **Agents** button next to Run in the Routing dashboard (`../../dashboard/`), 3 runs. Nothing to set up by hand. `variation_type` in the log: `agents`.
+**How it runs.** Choose **Agents** in the Evaluation test dropdown of the Routing dashboard (`../../dashboard/`) and click Run test: 3 runs. Nothing to set up by hand. `variation_type` in the log: `agents`.
 
 **What changes.** Two parts. Part 1 needs no new runs: the baseline runs show what each box received from the others. Part 2: one extra call picks one box that passes its answer on, and adds one wrong fact to its prompt ("Assume that: ..."). The same wrong fact is used in all 3 runs.
 

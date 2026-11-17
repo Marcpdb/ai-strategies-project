@@ -18,15 +18,15 @@ This folder turns the student's manual dashboard (`2-manual-dashboard/dashboard.
 
 Follow `reference/build-dashboard.md`, with the dashboard in `dashboard/` of this folder. For this strategy:
 
-- The one LLM box usually sits on the decision tab; its tools are drawn under it.
+- The one LLM box sits on the tab where its advice is used (or none: its advice shows under the flow); its tools are drawn under it.
 - Retrieval searches the notes in the export ("Notes for retrieval"). Ask the student which background from `2-manual-dashboard/` belongs in those notes, in their own words; do not copy whole documents.
 - Memory stays in the dashboard's browser between runs. Say so: it can make repeated runs differ.
 
 ## Then: the evaluation
 
-The dashboard has one button per test next to Run (5 tests, 3 runs each). Each button makes its own change automatically and logs it; see `reference/evaluation.md`. The student runs every test, codes every run on the last tab, downloads both log files and types "sync". When all 5 tests are done, "findings" writes `findings.md` in each folder of `evaluation/`:
+The dashboard has an Evaluation test dropdown next to Run (5 tests, 3 runs each). Each button makes its own change automatically and logs it; see `reference/evaluation.md`. The student runs every test, clicks Download log and types "sync". When all 5 tests are done, "findings" codes every run and writes `findings.md` in each folder of `evaluation/`:
 
-| Folder | Button | Step |
+| Folder | Test | Step |
 |---|---|---|
 | `1-baseline-stability` | Baseline | Document and Compare (TIA) |
 | `2-vary-wording` | Wording | Vary (systematic prompt variation) |

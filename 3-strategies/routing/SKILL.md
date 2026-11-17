@@ -19,13 +19,13 @@ This folder turns the student's manual dashboard (`2-manual-dashboard/dashboard.
 Follow `reference/build-dashboard.md`, with the dashboard in `dashboard/` of this folder. For this strategy:
 
 - The router usually sits on the first tab where the case is described; each specialist on the tab of its point of view.
-- Show on the decision tab which route was chosen, and why (the router's note).
+- The route chosen, and why (the router's note), shows in the conversation panel.
 
 ## Then: the evaluation
 
-The dashboard has one button per test next to Run (6 tests, 3 runs each). Each button makes its own change automatically and logs it; see `reference/evaluation.md`. The student runs every test, codes every run on the last tab, downloads both log files and types "sync". When all 6 tests are done, "findings" writes `findings.md` in each folder of `evaluation/`:
+The dashboard has an Evaluation test dropdown next to Run (6 tests, 3 runs each). Each button makes its own change automatically and logs it; see `reference/evaluation.md`. The student runs every test, clicks Download log and types "sync". When all 6 tests are done, "findings" codes every run and writes `findings.md` in each folder of `evaluation/`:
 
-| Folder | Button | Step |
+| Folder | Test | Step |
 |---|---|---|
 | `1-baseline-stability` | Baseline | Document and Compare (TIA) |
 | `2-vary-wording` | Wording | Vary (systematic prompt variation) |

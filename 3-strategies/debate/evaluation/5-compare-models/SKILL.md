@@ -7,7 +7,7 @@ description: "Evaluation test 'Models' for the Debate strategy. Use when the stu
 
 **Question.** Compare (CSA, models): how do models differ on the same case?
 
-**How it runs.** The **Models** button next to Run in the Debate dashboard (`../../dashboard/`), 3 runs. Nothing to set up by hand. `variation_type` in the log: `model`.
+**How it runs.** Choose **Models** in the Evaluation test dropdown of the Debate dashboard (`../../dashboard/`) and click Run test: 3 runs. Nothing to set up by hand. `variation_type` in the log: `model`.
 
 **What changes.** Every LLM box gets the next model up: Haiku → Sonnet, Sonnet → Opus, Opus → Sonnet. Effort, prompts and input stay the same. No extra call.
 
