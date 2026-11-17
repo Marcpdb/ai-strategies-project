@@ -277,7 +277,9 @@ function renderAdvice(){
   $("advice").innerHTML=`<span class="hint">Advice · run ${esc(l.run_id)} · ${esc(T?T.label+" test, run "+l.repeat_no+" of "+RUNS_PER_TEST:"free run")}${l.what_changed?" · changed: "+esc(l.what_changed):""}</span><span class="big">${esc(l.error?"Error: "+l.error:(l.ai_outcome||"(no clear outcome)"))}</span>${l.ai_output?`<details><summary>Full answer</summary><pre>${esc(l.ai_output)}</pre></details>`:""}`;
 }
 const logJSON=()=>JSON.stringify({strategy:STRATEGY.strategy,version:STRATEGY.version,runs_per_test:RUNS_PER_TEST,tests:TESTS.map(t=>t.type),evaluation_input:ST.evalInput,variations:ST.vars,runs:ST.log.map(l=>{ const r={...l}; delete r.status; delete r.labels; delete r.hot; return r; })},null,2);
-$("dlLog").addEventListener("click",async()=>{ if(!ST.log.length){ $("msg").textContent="No runs yet."; return; } await download(logName()+".csv",csv()); await download(logName()+".json",logJSON()); if(/^Saved/.test($("msg").textContent)) $("msg").textContent="Saved "+logName()+".csv and .json. Type sync in Claude Code."; });
+/* saves both log files (every run so far); also called automatically when a test finishes */
+async function saveLog(){ if(!ST.log.length){ $("msg").textContent="No runs yet."; return false; } await download(logName()+".csv",csv()); await download(logName()+".json",logJSON()); const ok=/^Saved/.test($("msg").textContent); if(ok) $("msg").textContent="Saved "+logName()+".csv and .json. Type sync in Claude Code."; return ok; }
+$("dlLog").addEventListener("click",()=>saveLog());
 $("runSel").addEventListener("change",e=>{ ST.review=e.target.value===""?null:+e.target.value; save(); restore(ST.review!=null?ST.log[ST.review]:null); render(); });
 
 /* ---- the evaluation tests: one button each, next to Run. Each test makes ONE change automatically,
@@ -386,7 +388,8 @@ function runTest(type){ const T=TESTS.find(t=>t.type===type);
     if(!ST.evalInput){ ST.evalInput=caseText(); save(); }
     if(!ST.vars[type]){ ST.vars[type]=await makeVariation(type,ST.evalInput); save(); renderEval(); }
     while(doneOf(type)<RUNS_PER_TEST){ $("msg").textContent=T.label+" test: run "+(doneOf(type)+1)+" of "+RUNS_PER_TEST+"…"; await runOnce(type,ST.vars[type]); }
-    $("msg").textContent=T.label+" test done ("+RUNS_PER_TEST+" runs). "+(allDone()?" All tests are done: download the log.":""); }); }
+    const saved=await saveLog();
+    $("msg").textContent=T.label+" test done ("+RUNS_PER_TEST+" runs). "+(saved?"The log was downloaded ("+logName()+".csv and .json). ":"The log was not downloaded: click Download log. ")+(allDone()?"All tests are done: type sync, then findings, in Claude Code.":"Type sync in Claude Code, or run the next test."); }); }
 $("stopBtn").addEventListener("click",()=>{ if(ctl) ctl.abort(); });
 
 /* ---- downloads in the log format ---- */
