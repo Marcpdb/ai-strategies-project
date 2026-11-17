@@ -7,7 +7,7 @@ Open this folder in the Code tab of the Claude desktop app and type the words in
 3. In the playground, learn the seven strategies. In the Sandbox, change and run the ones you choose for the final decision of your workflow. Click Export: fill in every _(fill in)_ in the file that opens, then click Download.
 4. **sync**: each strategy file goes to the folder of its strategy in `3-strategies/`.
 5. **build the <strategy> dashboard**, for example *build the chain dashboard*. You get an AI version of your dashboard with that strategy.
-6. Evaluate each strategy in its `evaluation/` folder, starting with `1-baseline-stability`: **set up**, run the tests in the dashboard, download both log files (CSV and JSON) from the decision tab, **sync**, **findings**.
+6. Evaluate each AI dashboard with the test buttons next to Run: Baseline, Wording, Fact, Boundary, Models and Agents. Each test makes its own change and runs 3 times. Code every run on the last tab, download both log files (CSV and JSON), **sync**, and when every test is done, **findings**.
 7. Compare the strategies and conclude in `4-compare-and-conclude/`.
 
 Type **status** at any time to see where you are and what comes next.
@@ -19,8 +19,7 @@ The playground and your dashboards are web pages. They cannot save into this fol
 | You download | From | sync moves it to |
 |---|---|---|
 | `strategy-<name>.md` | Export in the sandbox | `3-strategies/<strategy>/export/strategy.md` |
-| `runs-<strategy>-baseline.csv` and `.json` | your strategy's dashboard | `3-strategies/<strategy>/dashboard/logs/` |
-| `runs-<strategy>-<test>.csv` and `.json` | a test dashboard | `3-strategies/<strategy>/evaluation/<test>/logs/` |
+| `runs-<strategy>.csv` and `.json` | the last tab of your strategy's dashboard | `3-strategies/<strategy>/dashboard/logs/` |
 
 A log download always holds every run so far, so download again after new runs or after coding them, and sync again.
 

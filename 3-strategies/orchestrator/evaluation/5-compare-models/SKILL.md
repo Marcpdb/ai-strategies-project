@@ -1,19 +1,18 @@
 ---
 name: orchestrator-compare-models
-description: "Evaluation test 'Models' for the Orchestrator strategy. Use when the student sets up, syncs or writes findings for this test."
+description: "Evaluation test 'Models' for the Orchestrator strategy. Use when the student asks about this test or writes findings for it."
 ---
 
 # Orchestrator · Models
 
-**Question.** Compare (CSA, models): how do models differ on the same cases?
+**Question.** Compare (CSA, models): how do models differ on the same case?
 
-**What changes.** One change: the model. Either every LLM box, or one box (the one that decides). Effort, prompts and test cases stay the same.
+**How it runs.** The **Models** button next to Run in the Orchestrator dashboard (`../../dashboard/`), 3 runs. Nothing to set up by hand. `variation_type` in the log: `model`.
 
-Follow `reference/evaluation.md` (set up, sync, findings). The variation type in the log is `model`. For this test:
+**What changes.** Every LLM box gets the next model up: Haiku → Sonnet, Sonnet → Opus, Opus → Sonnet. Effort, prompts and input stay the same. No extra call.
 
-- Ask the student which box or boxes, and which model (Haiku, Sonnet or Opus). Write it in `plan.md`.
-- Build the test dashboard with only the model changed. Same test cases, same number of runs as the baseline.
+Follow `reference/evaluation.md`. Findings are written only when every test of the Orchestrator dashboard has its 3 runs; then this folder gets `findings.md`, from `../../dashboard/logs/runs.json`. In particular:
+
 - `models_answered` shows which model really answered: a named model that is not available is replaced by one of the same tier. Report it.
-- Findings: per test case, outcomes per model next to the baseline; also the time and estimated tokens per run.
-
-The folder ends up with `plan.md`, `dashboard.html`, `link.md`, `logs/` and `findings.md`.
+- The outcomes per model next to the baseline; also the time and estimated tokens per run, compared with the baseline.
+- Say what the boxes produced, never what they "thought".

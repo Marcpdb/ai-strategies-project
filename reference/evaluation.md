@@ -1,50 +1,42 @@
-# How every evaluation folder works
+# How the evaluation works
 
-Used by the `SKILL.md` in every `3-strategies/<strategy>/evaluation/<test>/` folder. The four steps of the AI evaluation (Document, Vary, Compare, Conclude) are spread over these folders:
+Used by the `SKILL.md` in every `3-strategies/<strategy>/evaluation/<test>/` folder. The evaluation is run from the strategy's own dashboard: next to **Run** there is one button per test. Each test makes **one** change automatically (with an extra prompt the student can read and edit before the first run), runs **3 times** on the same input, and logs everything. Nothing is set up by hand, and there are no separate test dashboards.
 
-| Folder | Step | Question |
-|---|---|---|
-| 1-baseline-stability | Document, Compare (TIA) | What exactly produced this result? Do repeated runs give the same outcome? |
-| 2-vary-wording | Vary (systematic prompt variation) | Does changing the order or wording of a prompt change the outcome? |
-| 3-vary-fact | Vary (counterfactual prompting) | Does changing one decisive fact change the outcome? |
-| 4-vary-boundary | Vary (boundary testing) | With missing or conflicting information, does it flag uncertainty, or make things up? |
-| 5-compare-models | Compare (CSA, models) | How do models differ on the same cases? |
-| 6-compare-agents | Compare (ISIA, multi-agent only) | Do agents influence each other, and do errors spread? |
+| Folder | Button | Step | Question | What the button changes |
+|---|---|---|---|---|
+| 1-baseline-stability | Baseline | Document, Compare (TIA) | What exactly produced this result? Do repeated runs give the same outcome? | Nothing |
+| 2-vary-wording | Wording | Vary (systematic prompt variation) | Does changing the order or wording of the prompts change the outcome? | One extra call rewords every prompt, same meaning |
+| 3-vary-fact | Fact | Vary (counterfactual prompting) | Does changing one decisive fact change the outcome? | One extra call changes one decisive fact in the input |
+| 4-vary-boundary | Boundary | Vary (boundary testing) | With missing or conflicting information, does it flag uncertainty, or make things up? | One extra call removes one piece of information, or adds a contradiction |
+| 5-compare-models | Models | Compare (CSA, models) | How do models differ on the same case? | Every box one model up: Haiku → Sonnet, Sonnet → Opus, Opus → Sonnet |
+| 6-compare-agents | Agents | Compare (ISIA, multi-agent only) | Do the boxes influence each other, and do errors spread? | One extra call picks one box that passes its answer on, and gives it one wrong fact |
+
+The input is fixed at the first test run: every test uses the same data of the dashboard (the fact and boundary tests change that same input). Single call has no Agents test.
 
 Comparing the strategies with each other (CSA) and the conclusion are in `4-compare-and-conclude/`.
 
-## The same three moves in every folder
+## 1. Run (in the dashboard)
 
-### 1. Set up (the student says "set up")
+The student clicks each test button, reads the extra prompt (and may change it before the first run of that test), and clicks Run. Each test runs 3 times. On the last tab they code every run: verdict, flags uncertainty, makes things up, and a note. When every test has 3 runs, the dashboard says so. They download both log files (CSV and JSON) and type "sync": the files go to `../../dashboard/logs/` as `runs.csv` and `runs.json`.
 
-- Read `../../export/strategy.md`, `../../dashboard/link.md` and `3-strategies/test-cases.md`. If the strategy's dashboard does not exist yet, stop: it is built first (`SKILL.md` of the strategy folder).
-- Agree with the student on **one** change, as the folder's `SKILL.md` describes. Change nothing else.
-- Write `plan.md` in the folder, before any run:
-  - what is changed, from what to what, and why;
-  - the test cases used;
-  - the number of runs per test case, set now (at least 3), and that every run is reported.
-- If the test needs its own dashboard (every folder except 1 and part of 6): copy `../../dashboard/dashboard.html` to `dashboard.html` in this folder, make exactly the one change, set `VARIATION` to `{type:"<type>",what:"<the change in a few words>"}`, publish it as a separate artifact titled "<dashboard name> · <strategy> · <test>", with the same `capabilities` as the strategy's dashboard, and write the link to `link.md` in this folder.
-- Tell the student which link to open, which test cases to run and how many times (use the 3× button), and that they accept or override and code every run (verdict, flags uncertainty, makes things up). Then they download both log files and type "sync".
+## 2. Findings (the student says "findings")
 
-### 2. Sync (the student says "sync")
+**Only when every test is done.** Read `../../dashboard/logs/runs.json`. Its `tests` lists the tests of this dashboard. Every one of them needs at least 3 runs without an error. If not, say which tests still miss runs, and stop: no findings until all tests of this dashboard are done.
 
-The student downloads both log files (CSV and JSON) from the decision tab of the test dashboard; "sync" (main `SKILL.md`) moves them to `logs/` here. For folder 1 the runs come from the strategy's own dashboard and go to `../../dashboard/logs/`.
+Then write `findings.md` in every test folder of this strategy, in plain English, short:
 
-### 3. Findings (the student says "findings")
-
-Write `findings.md` from the logs, in plain English, short:
-
-- **What was tested:** copied from `plan.md`, with the dates and the models that actually answered.
-- **Runs:** a table per test case: run, outcome (`ai_outcome`), the student's coding (verdict, uncertainty flagged, fabricated).
-- **Compared with the baseline:** the same table from `../../dashboard/logs/` (the baseline runs) next to it. Say only what the logs show: how many runs gave the same outcome, where the outcome changed.
-- **Open:** runs that are not coded yet, runs with an error, fewer runs than planned. Ask the student to finish them; do not code runs yourself.
+- **What was tested:** the question, the change as logged (`what_changed`, and for an extra call `extra_prompt` and `extra_output`), the dates, the input, and the models that actually answered (`models_answered`).
+- **Runs:** a table: run, outcome (`ai_outcome`), the student's coding (verdict, uncertainty flagged, fabricated).
+- **Compared with the baseline:** the baseline runs next to them (not in folder 1). Say only what the log shows: how many runs gave the same outcome, where the outcome changed.
+- **Open:** runs that are not coded yet, runs with an error. Ask the student to code them; never code runs yourself.
 - **The student's conclusion:** an empty section with the folder's question. The student writes it; offer to help them phrase it, never write it for them.
+
+Each test folder's `SKILL.md` says what its findings look at in particular.
 
 ## Rules
 
-- One change at a time; everything else stays the same as the baseline.
-- The strategy's own dashboard is only for the baseline. Every change gets its own test dashboard, so the logs never mix.
+- One change per test; everything else stays the same as the baseline. The dashboard does this: do not change prompts or models by hand during the evaluation.
 - Report every run, also the failed ones.
 - No anthropomorphism: write "the debater boxes produced", not "the agents argued" or "the agent thought".
-- Invented cases only, no real personal data.
+- Invented data only, no real personal data.
 - Tokens are estimates (about 4 characters per token).

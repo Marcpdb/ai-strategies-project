@@ -1,18 +1,18 @@
 ---
 name: routing-vary-boundary
-description: "Evaluation test 'Missing or conflicting information' for the Routing strategy. Use when the student sets up, syncs or writes findings for this test."
+description: "Evaluation test 'Missing or conflicting information' for the Routing strategy. Use when the student asks about this test or writes findings for it."
 ---
 
 # Routing · Missing or conflicting information
 
 **Question.** Vary (boundary testing): with missing or conflicting information, does it flag uncertainty, or make things up?
 
-**What changes.** One change: one test case with information left out, or with two pieces of information that contradict each other. The prompts stay as they are.
+**How it runs.** The **Boundary** button next to Run in the Routing dashboard (`../../dashboard/`), 3 runs. Nothing to set up by hand. `variation_type` in the log: `boundary`.
 
-Follow `reference/evaluation.md` (set up, sync, findings). The variation type in the log is `boundary`. For this test:
+**What changes.** One extra call removes one piece of information the advice depends on, or adds one sentence that contradicts another fact. The prompts stay as they are. The same input is used in all 3 runs.
 
-- Ask the student which information to remove or make conflicting, in one test case. Write it in `plan.md`.
-- Build the test dashboard with that one extra test case, named "<case> (missing: ...)" or "<case> (conflict: ...)". Run it as often as the baseline.
-- The student's coding matters most here: "flags uncertainty" and "makes things up". Findings: count both per run, and quote the sentence of the output that shows it, word for word.
+Follow `reference/evaluation.md`. Findings are written only when every test of the Routing dashboard has its 3 runs; then this folder gets `findings.md`, from `../../dashboard/logs/runs.json`. In particular:
 
-The folder ends up with `plan.md`, `dashboard.html`, `link.md`, `logs/` and `findings.md`.
+- What was removed or contradicted (`what_changed`).
+- The student's coding matters most here: count "flags uncertainty" and "makes things up" over the 3 runs, and quote the sentence of the output that shows it, word for word.
+- Say what the boxes produced, never what they "thought".

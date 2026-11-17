@@ -1,19 +1,19 @@
 ---
 name: parallel-compare-agents
-description: "Evaluation test 'Agent interaction' for the Parallel strategy. Use when the student sets up, syncs or writes findings for this test."
+description: "Evaluation test 'Agent interaction' for the Parallel strategy. Use when the student asks about this test or writes findings for it."
 ---
 
 # Parallel · Agent interaction
 
-**Question.** Compare (ISIA, multi-agent only): do agents influence each other, and do errors spread?
+**Question.** Compare (ISIA, multi-agent only): do the boxes influence each other, and do errors spread?
 
-**What changes.** Two parts. First, read what the boxes received from each other in the baseline runs. Then one change: one box gets one wrong fact in its prompt (for example "Assume that the budget is twice as high."), and you look whether it reaches the outcome.
+**How it runs.** The **Agents** button next to Run in the Parallel dashboard (`../../dashboard/`), 3 runs. Nothing to set up by hand. `variation_type` in the log: `agents`.
 
-Follow `reference/evaluation.md` (set up, sync, findings). The variation type in the log is `agents`. For this test:
+**What changes.** Two parts. Part 1 needs no new runs: the baseline runs show what each box received from the others. Part 2: one extra call picks one box that passes its answer on, and adds one wrong fact to its prompt ("Assume that: ..."). The same wrong fact is used in all 3 runs.
 
+Follow `reference/evaluation.md`. Findings are written only when every test of the Parallel dashboard has its 3 runs; then this folder gets `findings.md`, from `../../dashboard/logs/runs.json`. In particular:
+
+- Part 1, from the baseline `steps` in `runs.json`: per run, what each box received and passed on.
+- Part 2: which box got which wrong fact (`what_changed`). Per run, does the wrong fact appear in later boxes, and in the outcome? Quote where it appears.
 - What to look for in this strategy: Does the aggregator follow the majority, one particular box, or its own reading of the case? Does one wrong answer reach the outcome?
-- Part 1 needs no new runs: read the `steps` in `../../dashboard/logs/runs.json` (the baseline) and show, per run, what each box received and passed on.
-- Part 2: ask the student which box gets which wrong fact. Write it in `plan.md`. Build the test dashboard with only that line added to that one prompt. Same test cases, same number of runs.
-- Findings: per run, does the wrong fact appear in later boxes, and in the outcome? Quote where it appears. Say what the boxes produced, not what they "thought".
-
-The folder ends up with `plan.md`, `dashboard.html`, `link.md`, `logs/` and `findings.md`.
+- Say what the boxes produced, never what they "thought".
