@@ -109,7 +109,6 @@ button,select,input,textarea{font:inherit;color:inherit} :focus-visible{outline:
         <p class="grow" id="desc"></p>
         <select class="runs" id="runs" aria-label="Last runs"></select>
         <button class="btn" type="button" id="resetBtn">Reset</button>
-        <button class="btn" type="button" id="dlRuns" hidden>Download runs</button>
         <button class="btn" type="button" id="exportBtn" hidden>Export strategy</button>
         <button class="btn run" type="button" id="runBtn">Run</button>
         <button class="btn" type="button" id="stopBtn" hidden>Stop</button>
@@ -412,8 +411,9 @@ const STORE="ai-playground-v5", MAXRUNS=30;
 const SAND_EMPTY=()=>({name:"My strategy",base:"",nodes:[IN(110,200),L("n2",470,200,"Agent",{prompt:"{{input}}"}),OUT(830,200)],edges:[E("in","n2"),E("n2","out")],seq:3});
 let S={mode:"play",tab:"parallel",over:{},sandbox:null,runs:{},view:{},seq:0,knowledge:KNOWLEDGE,memory:[]};
 try{ const s=JSON.parse(localStorage.getItem(STORE)||"null"); if(s) S=Object.assign(S,s); }catch(e){}
-if(!S.sandbox) S.sandbox=SAND_EMPTY(); if(!ORDER.includes(S.tab)) S.tab="parallel";
-function save(){ for(let i=0;i<5;i++){ try{ localStorage.setItem(STORE,JSON.stringify(S)); return; }catch(e){ const k=Object.keys(S.runs).sort((a,b)=>S.runs[b].length-S.runs[a].length)[0]; if(!k||!S.runs[k].length) return; S.runs[k].pop(); } } }
+if(!S.sandbox) S.sandbox=SAND_EMPTY(); delete S.runs.sandbox; if(!ORDER.includes(S.tab)) S.tab="parallel";
+/* runs in the sandbox are not saved: only the last one is shown, until the page is reloaded */
+function save(){ for(let i=0;i<5;i++){ try{ localStorage.setItem(STORE,JSON.stringify(Object.assign({},S,{runs:Object.assign({},S.runs,{sandbox:undefined})}))); return; }catch(e){ const k=Object.keys(S.runs).sort((a,b)=>S.runs[b].length-S.runs[a].length)[0]; if(!k||!S.runs[k].length) return; S.runs[k].pop(); } } }
 const sand=()=>S.mode==="sand";
 const key=()=>sand()?"sandbox":S.tab;
 function graph(){ if(sand()) return S.sandbox; const p=PRESETS[S.tab], o=S.over[S.tab]||{};
@@ -467,7 +467,7 @@ function bubblesSvg(by){ let h=""; const vb=VBH(), ring=graph().ring;
 /* ---------- top: mode, tabs, bar ---------- */
 function renderTop(){
   document.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===S.mode)));
-  $("tabs").hidden=sand(); $("palette").hidden=!sand(); $("exportBtn").hidden=!sand(); $("dlRuns").hidden=!sand(); $("resetBtn").hidden=sand();
+  $("tabs").hidden=sand(); $("palette").hidden=!sand(); $("exportBtn").hidden=!sand(); $("runs").hidden=sand(); $("resetBtn").hidden=sand();
   $("tabs").innerHTML=ORDER.map(k=>`<button class="tab" type="button" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(PRESETS[k].name)}</button>`).join("");
   $("desc").textContent=sand()?"":PRESETS[S.tab].desc;
   $("wf").hidden=sand();
@@ -625,7 +625,7 @@ $("runBtn").addEventListener("click",async()=>{
     ai_output:res?res.output:"",calls:res?res.calls:live.steps.filter(s=>s.model_asked).length,tokens_est:res?res.tokens_est:0,seconds:res?res.seconds:null,error:err?(err.msg||err.code||"failed"):"",
     settings:g.nodes.filter(n=>n.type!=="aux").map(n=>({id:n.id,label:n.label,type:n.type,model:n.cfg.model==="custom"?n.cfg.customId:n.cfg.model,effort:n.cfg.effort||"",tools:n.cfg.tools||[],prompt:n.cfg.prompt||"",maxWords:n.cfg.maxWords,maxRounds:n.cfg.maxRounds,rounds:n.cfg.rounds})),
     steps:res?res.steps:live.steps,transcript:res?res.transcript:"",status:Object.fromEntries(Object.entries(status).filter(([a,v])=>v==="done"||v==="skipped"||v==="error")),labels:{...labels},hot:[...hot]};
-  (S.runs[k] ||= []).unshift(rec); S.runs[k]=S.runs[k].slice(0,MAXRUNS); S.view[k]=rec.run_id;
+  (S.runs[k] ||= []).unshift(rec); S.runs[k]=S.runs[k].slice(0,k==="sandbox"?1:MAXRUNS); /* the sandbox only shows its last run */ S.view[k]=rec.run_id;
   running=false; live=null; bubbles={}; $("runBtn").disabled=false; $("stopBtn").hidden=true; save(); refresh();
   if(err){ $("msg").classList.add("err"); $("msg").textContent=err.msg||ERR[err.code]||ERR.upstream_error; }
 });
@@ -636,7 +636,6 @@ async function download(name,data){ const m=$("msg"); m.classList.remove("err");
   try{ const dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null; if(dl){ await dl.save({filename:name,data}); m.textContent="Saved "+name+"."; return; } }catch(e){ if(e&&e.code){ m.textContent="Not saved."; return; } }
   try{ await navigator.clipboard.writeText(data); m.textContent="Download is not available here, so "+name+" was copied."; }catch(e){ m.textContent="Download is not available in this view."; } }
 const slug=s=>String(s||"strategy").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"strategy";
-$("dlRuns").addEventListener("click",()=>{ const L2=runsList(); if(!L2.length){ $("msg").textContent="No runs yet."; return; } download("runs-"+slug(S.sandbox.name)+"-"+new Date().toISOString().slice(0,19).replace(/[-:T]/g,"").replace(/^(\d{8})/,"$1-")+".json",JSON.stringify({exported:new Date().toISOString(),strategy:S.sandbox.name,runs:L2},null,2)); });
 /* Export: the file opens here to be filled in, then it is downloaded. "sync" in Claude Code copies it from Downloads
    to the folder of its strategy. Exporting the same strategy again keeps the answers already filled in (kept in this browser). */
 function keepFilled(oldMd,newMd){ const FILL="_(fill in)_", old={}; let box="";
