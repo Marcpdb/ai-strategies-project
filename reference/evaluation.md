@@ -18,7 +18,7 @@ Step 1 happens for every run, automatically: the dashboard logs all of it (`refe
 - **Title** the run in the small box next to Run, for example "Baseline", "Vary input: budget €20", "Vary system: Opus for every box". Runs with the same title belong together: run each one about 3 times.
 - **Run.** The dashboard logs the run with its title and with what differs from the original (`changes_detected`). Under the advice, the student can write the issues they noticed; they go into the log too.
 
-After each run the log is downloaded (CSV and JSON, every run so far; **Download log** does the same by hand). The student types "sync": the files go to `3-strategies/<strategy>/dashboard/logs/` as `runs.csv` and `runs.json`.
+When the student is done running, they click **Download log** (CSV and JSON, every run so far; nothing is downloaded after a run by itself). The student types "sync": the files go to `3-strategies/<strategy>/dashboard/logs/` as `runs.csv` and `runs.json`.
 
 Advice for the student (say it when they ask what to run): first about 3 runs titled "Baseline" with nothing changed; then one change at a time, about 3 runs per title; the same input in every strategy dashboard when comparing strategies.
 

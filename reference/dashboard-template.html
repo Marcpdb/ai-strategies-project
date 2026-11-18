@@ -252,7 +252,7 @@ function renderFlow(){
     if(b){ const k=[...hot].some(x=>x.endsWith(">"+R.to)); const p2=anchor(b,{x:R.x,y:R.y},8); h+=`<g class="e ${k?"hot":""}"><path d="M${R.x+R.r+(R.pad||62)},${R.y} L${p2.x},${p2.y}" marker-end="url(#${k?"ahh":"ah"})"/></g>`; } }
   G.edges.forEach(e=>{ if(e.hide) return; const a=by[e.from],b=by[e.to]; if(!a||!b) return; const p=epath(a,b,e.bend||0), k=hot.has(e.from+">"+e.to);
     h+=`<g class="e ${e.dash?"dash":""} ${k?"hot":""}"><path d="${p.d}" marker-end="url(#${k?"ahh":"ah"})"/>${e.label?`<text x="${p.lx}" y="${p.ly}">${esc(e.label)}</text>`:""}</g>`; });
-  G.nodes.forEach(n=>{ const st=STEPS.find(s=>s.id===STEP_OF[n.id]); const lab=labels[n.id]||n.label; const chg=n.type==="in"?inputChanged():boxChanged(n.id); const sub=n.type==="aux"||n.type==="out"?"":(n.type==="in"?(chg?"changed":""):(n.type==="gate"?"max "+n.cfg.maxWords+" words":[st?"step "+st.n+(st.label!==lab?" · "+st.label:""):"",chg?"changed":""].filter(Boolean).join(" · ")));
+  G.nodes.forEach(n=>{ const st=STEPS.find(s=>s.id===STEP_OF[n.id]); const lab=labels[n.id]||n.label; const chg=n.type==="in"?inputChanged():boxChanged(n.id); const sub=n.type==="aux"||n.type==="out"?"":(n.type==="in"?(chg?"changed":""):(n.type==="gate"?"max "+n.cfg.maxWords+" words":[mname(Object.assign({},n.cfg,ST.over[n.id]||{})),chg?"changed":""].filter(Boolean).join(" · ")));
     h+=`<g class="n ${kind(n)} ${status[n.id]||""} ${(n.type==="in"?ST.showIn:STEP_OF[n.id]===ST.tab&&!ST.showIn)?"cur":""}" data-go="${esc(n.id)}" tabindex="0" role="button" aria-label="${esc(lab)}"><rect x="${n.x-n.w/2}" y="${n.y-n.h/2}" width="${n.w}" height="${n.h}" rx="${kind(n)==="io"?n.h/2:3}"/><text x="${n.x}" y="${n.y-(sub?6:0)}">${esc(lab.length>n.w/9.6?lab.slice(0,Math.floor(n.w/9.6)-1)+"…":lab)}</text>${sub?`<text class="sub" x="${n.x}" y="${n.y+14}">${esc(sub)}</text>`:""}</g>`; });
   for(const [id,b] of Object.entries(bubbles)){ const n=by[id]; if(!n||!b) continue; const L=b.thinking?[]:wrapTail(b.text,30,2), W=b.thinking?62:210, H=b.thinking?26:L.length*16+14;
     const below=G.ring&&n.type==="debater"&&n.y>G.ring.y+10;
@@ -370,8 +370,8 @@ $("runTitle").addEventListener("input",e=>{ e.target.classList.remove("need"); S
 $("runTitle").addEventListener("keydown",e=>{ if(e.key==="Enter") $("runBtn").click(); });
 $("runBtn").addEventListener("click",()=>{ if(running) return; const t=$("runTitle").value.trim();
   if(!t){ $("runTitle").classList.add("need"); $("runTitle").focus(); $("msg").textContent="Give the run a title first, for example Baseline."; return; }
-  guarded("Running…",async()=>{ await runOnce(t); const saved=await saveLog();
-    $("msg").textContent="Done. The advice is under the flow. "+(saved?"The log was downloaded ("+logName()+".csv and .json): type sync in Claude Code.":"Click Download log, then type sync in Claude Code."); }); });
+  guarded("Running…",async()=>{ await runOnce(t);
+    $("msg").textContent="Done. The advice is under the flow. The run is in the log: when you are done running, click Download log, then type sync in Claude Code."; }); });
 
 /* ---- run: the shared engine, one separate call to Claude per box ---- */
 let sample=null, toolsOK=false;

@@ -29,10 +29,10 @@ Start from a copy of `2-manual-dashboard/dashboard.html`. Keep its title, header
 
 1. **The engine**, copied verbatim: the block from `/* ===== ENGINE START` to `/* ENGINE END */` out of `1-playground/playground.html`. Do not write your own strategy logic.
 2. **The strategy**, copied verbatim: `STRATEGY` from the "Boxes" section, prompts exactly as written; `STRATEGY.strategy` is the strategy's name (Single call, Chain, Routing, Parallel, Orchestrator, Critic, Debate), because the log files are named after it. The confirmed mapping goes in `STEP_OF`; `STEPS` lists the dashboard's own tabs (id, number, label) in order.
-3. **The AI flow card**, under the tabs: the flow (In to Out, live, with the step of each box under its name and no model names), and top right: Run shown, Download log, the run **title** box and **Run**. Under the flow: the advice of the run shown, with the field for the student's issues.
+3. **The AI flow card**, under the tabs: the flow (In to Out, live, with the model of each box in small under its name), and top right: Run shown, Download log, the run **title** box and **Run**. Under the flow: the advice of the run shown, with the field for the student's issues.
 4. **In each tab:** the agent card of every box on that tab, on top of the tab's own content (what it says, what it received, and "Prompt and model" to change them). Clicking **In** shows the input of the run, which the student can change.
 5. **The conversation panel** ("What the agents say"), next to or under the tab, as the dashboard's layout allows.
-6. **Run and log:** `caseText()` from the dashboard's own data, `OUTCOMES` (the outcomes and the words that recognise them in the line `Advice: ...`), the run with its title, the log in the format of `reference/log-format.md`, and the downloads.
+6. **Run and log:** `caseText()` from the dashboard's own data, `OUTCOMES` (the outcomes and the words that recognise them in the line `Advice: ...`), the run with its title, the log in the format of `reference/log-format.md`, and the downloads (only when the student clicks Download log, never after every run).
 
 Make the added pieces look like the student's dashboard: map the template's colour tokens (`--page`, `--card`, `--ink`, `--muted`, `--line`, the green, io and code colours) and fonts to the ones of the student's dashboard, and keep their spacing and corners. Keep the flow's meaning of colours (LLM boxes, In/Out, code), in the student's palette. Keep light and dark mode working if their dashboard has them.
 
