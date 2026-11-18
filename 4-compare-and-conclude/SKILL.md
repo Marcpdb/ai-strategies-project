@@ -7,7 +7,7 @@ description: "Compares the student's strategies on the same input (CSA) and help
 
 Two parts. Both work only from the logs and findings in `3-strategies/`; run "sync" first (main `SKILL.md`).
 
-**Only when every chosen strategy is done.** The chosen strategies are those with an `export/strategy.md`. Each needs a dashboard, baseline runs in `dashboard/logs/runs.json`, and a `findings.md` for every run title in its log. If one is not done, do not compare or conclude: say which strategy is missing what, and what the student does next ("build the chain dashboard", the baseline still to run, "findings for chain").
+**Only when every chosen strategy is done.** The chosen strategies are those with an `export/strategy.md`; the student chooses 5. With fewer than 5, say how many are still missing. Each needs a dashboard, baseline runs in `dashboard/logs/runs.json`, and a `findings.md` for every run title in its log. If one is not done, do not compare or conclude: say which strategy is missing what, and what the student does next ("build the chain dashboard", the baseline still to run, "findings for chain").
 
 ## 1. Compare the strategies (CSA): "compare"
 

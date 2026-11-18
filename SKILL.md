@@ -5,7 +5,7 @@ description: "The main skill of the AI strategies project folder. Use when a stu
 
 # AI strategies project: the main skill
 
-The student adds AI strategies to the final decision of their own workflow dashboard (their "manual dashboard", from an earlier exercise) and evaluates them. This skill knows the whole project. It checks that everything is there, gives the playground, and hands every export to the folder of its strategy. The work inside a strategy folder is done by that folder's `SKILL.md`.
+The student chooses 5 AI strategies, adds them to the final decision of their own workflow dashboard (their "manual dashboard", from an earlier exercise) and evaluates them. This skill knows the whole project. It checks that everything is there, gives the playground, and hands every export to the folder of its strategy. The work inside a strategy folder is done by that folder's `SKILL.md`.
 
 ## The folder
 
@@ -32,7 +32,7 @@ Never change or delete what the student made: `2-manual-dashboard/`, filled-in `
 
    Write the link to `1-playground/link.md`.
 2. **Check** as under "status", and say what is missing.
-3. Tell the student the next step in one or two lines: learn the strategies in the Playground tab (all on the same dinner workflow: Dishes, Guests, Budget & time, Choose; `reference/workflow.png` shows it); in the Sandbox load, change and run the ones they choose for the final decision of their workflow; export each one, fill in every _(fill in)_ in the file that opens, click Download, and type "sync".
+3. Tell the student the next step in one or two lines: learn the strategies in the Playground tab (all on the same dinner workflow: Dishes, Guests, Budget & time, Choose; `reference/workflow.png` shows it); choose 5 strategies for the final decision of their workflow (the two Debate examples count as one strategy); in the Sandbox load, change and run each one; export each one, fill in every _(fill in)_ in the file that opens, click Download, and type "sync".
 
 ## The manual dashboard
 
@@ -52,7 +52,7 @@ The playground and the dashboards are web pages: they cannot write into this fol
 1. **Strategy files** `strategy-<name>.md` (from Export in the sandbox). The folder follows from the line "Based on: <strategy>." in the file: Single call → `single-call`, Chain → `chain`, Routing → `routing`, Parallel → `parallel`, Orchestrator → `orchestrator`, Critic → `critic`, Debate (steps) or Debate (dishes) → `debate`. No such line (the sandbox started empty): ask the student which strategy it is. Move it to `3-strategies/<folder>/export/strategy.md`. If that file exists and is different, do not overwrite it: ask the student which one to keep, and show which lines differ. Two new files for one strategy: ask which one.
 2. **Run logs** `runs-<strategy>.csv` and `.json` (from **Download log** at the top right of a dashboard). They hold every run of that dashboard, each with the title the student gave it. Move them to `3-strategies/<strategy>/dashboard/logs/` as `runs.csv` and `runs.json`. A newer download replaces the older one: the dashboard always downloads every run so far.
 3. **Missing:** a dashboard with a link but no log yet, or a log whose newest run is older than the student's last session. Remind them to click Download log in that dashboard.
-4. **Next step.** For each strategy with a new strategy file: the strategy's `SKILL.md` builds its dashboard next ("build the parallel dashboard"). For each strategy whose log has new runs: "findings" when the student has run what they want to evaluate (at least about 3 runs titled Baseline). When every strategy with an export has its findings: "compare". Until then, name the strategy that comes next, as in "What comes next" in `reference/evaluation.md`.
+4. **Next step.** For each strategy with a new strategy file: the strategy's `SKILL.md` builds its dashboard next ("build the parallel dashboard"). For each strategy whose log has new runs: "findings" when the student has run what they want to evaluate (at least about 3 runs titled Baseline). While fewer than 5 strategies have an export, say how many the student still has to choose and export. When all 5 have their findings: "compare". Until then, name the strategy that comes next, as in "What comes next" in `reference/evaluation.md`.
 
 ## "status"
 
@@ -61,7 +61,8 @@ A short list:
 - playground link: yes or no;
 - `2-manual-dashboard/dashboard.html`: yes or no;
 - per strategy that has an export: export filled in (any _(fill in)_ left?), dashboard link, the run titles in the log at the last sync with the number of runs of each, which evaluation folders have a `findings.md`;
-- the next step: the next strategy to build, run or write findings for, and "compare" only when every strategy with an export has its findings.
+- the number of strategies chosen (with an export) out of the 5 the student needs;
+- the next step: the next strategy to choose, build, run or write findings for, and "compare" only when all 5 have their findings.
 
 Strategies without an export are not listed: the student chose others.
 

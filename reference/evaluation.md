@@ -51,12 +51,13 @@ Existing `findings.md` files hold the student's checks and conclusions: never ov
 
 ## 3. What comes next (always say this after findings)
 
-The student evaluates every strategy they chose: every strategy with an `export/strategy.md`. After writing findings, look at the others and tell the student the next step in one or two lines:
+The student chooses 5 strategies and evaluates each: the strategies with an `export/strategy.md`. After writing findings, look at the others and tell the student the next step in one or two lines:
 
 - a strategy with an export but no dashboard yet: "build the <strategy> dashboard";
 - a strategy with a dashboard but no baseline runs in its log: run the baseline there first;
 - a strategy with runs but without findings: "findings for <strategy>";
-- every strategy with findings: "compare" (`4-compare-and-conclude/`).
+- fewer than 5 strategies with an export: the student still has to choose and export the others in the playground's Sandbox;
+- all 5 strategies with findings: "compare" (`4-compare-and-conclude/`).
 
 ## Rules
 

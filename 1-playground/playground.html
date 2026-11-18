@@ -423,7 +423,7 @@ function epath(a,b,bend){ const p1=anchor(a,b,6),p2=anchor(b,a,8),mx=(p1.x+p2.x)
 const VBH=()=>sand()?Math.max(440,S.sandbox.vbh||0):(graph().vbh||360);
 const kind=n=>n.type==="in"||n.type==="out"?"io":(n.type==="gate"?"code":"llm");
 function fit(s,w){ const m=Math.floor(w/9.6); return s.length>m?s.slice(0,m-1)+"…":s; }
-function sub(n){ if(["aux","in","out"].includes(n.type)) return ""; if(n.type==="gate") return "max "+(n.cfg.maxWords||60)+" words"; const st=String(n.cfg.step||"").trim(); if(!st) return ""; const w=WORKFLOW.find(x=>String(x.n)===st); return "step "+st+(w&&w.label!==n.label?" · "+w.label:""); }
+function sub(n){ if(["aux","in","out"].includes(n.type)) return ""; if(n.type==="gate") return "max "+(n.cfg.maxWords||60)+" words"; const st=sand()?"":String(n.cfg.step||"").trim(); if(!st) return ""; const w=WORKFLOW.find(x=>String(x.n)===st); return "step "+st+(w&&w.label!==n.label?" · "+w.label:""); }
 const ARROW=c=>`<marker id="${c}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--${c==="ah"?"arrow":"live"})" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>`;
 function render(){
   const g=graph(), sb=sand(); svg.setAttribute("viewBox","0 0 1000 "+VBH());
@@ -460,8 +460,9 @@ function renderTop(){
   $("tabs").hidden=sand(); $("palette").hidden=!sand(); $("exportBtn").hidden=!sand(); $("dlRuns").hidden=!sand(); $("resetBtn").hidden=sand();
   $("tabs").innerHTML=ORDER.map(k=>`<button class="tab" type="button" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(PRESETS[k].name)}</button>`).join("");
   $("desc").textContent=sand()?"":PRESETS[S.tab].desc;
+  $("wf").hidden=sand();
   const on=sand()?stepsUsed(S.sandbox):(PRESETS[S.tab].steps||[]);
-  $("wf").innerHTML=`<b>The workflow</b>`+WORKFLOW.map((w,i)=>`${i?`<span class="ar" aria-hidden="true">→</span>`:""}<span class="st ${on.includes(w.n)?"on":""}" title="${esc(w.what)}">${w.n} ${esc(w.label)}</span>`).join("")+`<span style="margin-left:6px">${sand()?"Green: the steps your boxes do (Step, in the panel of a box).":"Every strategy decides on this same workflow. Step 1, the list of dishes, is in the In box; green: the steps its boxes do."}</span>`;
+  $("wf").innerHTML=`<b>The workflow</b>`+WORKFLOW.map((w,i)=>`${i?`<span class="ar" aria-hidden="true">→</span>`:""}<span class="st ${on.includes(w.n)?"on":""}" title="${esc(w.what)}">${w.n} ${esc(w.label)}</span>`).join("")+`<span style="margin-left:6px">${sand()?"":"Every strategy decides on this same workflow. Step 1, the list of dishes, is in the In box; green: the steps its boxes do."}</span>`;
   $("startFrom").innerHTML=`<option value="">Empty</option>`+ORDER.map(k=>`<option value="${k}">${esc(PRESETS[k].name)}</option>`).join("");
   renderRuns();
 }
@@ -510,7 +511,6 @@ function renderPanel(){
     h+=`<div class="two"><label class="f"><span>Model</span><select id="fModel">${MODEL_LIST.map(([v,t])=>`<option value="${v}" ${v===c.model?"selected":""}>${t}</option>`).join("")}</select></label>
       <label class="f"><span>Effort</span><select id="fEffort">${[["","Default"],["low","Low"],["medium","Medium"],["high","High"]].map(([v,t])=>`<option value="${v}" ${v===(c.effort||"")?"selected":""}>${t}</option>`).join("")}</select></label></div>
       ${c.model==="custom"?`<label class="f"><span>Model ID</span><input type="text" id="fCustom" value="${esc(c.customId||"")}" placeholder="e.g. claude-haiku-4-5"></label>`:""}
-      <label class="f"><span>Step of the workflow (shown under the box, e.g. 2 or 2–3)</span><input type="text" id="fStep" value="${esc(c.step||"")}"></label>
       <label class="f"><span>Prompt</span><textarea id="fPrompt" rows="8">${esc(c.prompt)}</textarea></label>
       <p class="hint">{{input}} what flows in · {{question}} the In text${nd.type==="worker"?" · {{subtask}}":""}${g.nodes.some(n=>n.type==="debater")?" · {{debate}}":""}${g.edges.some(e=>e.loop&&e.to===nd.id)?" · {{feedback}}":""}</p>
       ${nd.type==="evaluator"?`<label class="f"><span>Maximum rounds</span><input type="number" id="fRounds" min="1" max="5" value="${esc(c.maxRounds||3)}"></label>`:""}
