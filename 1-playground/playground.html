@@ -3,7 +3,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a toggle between Dinner planner (the example workflow dashboard, without AI, one tab per step), Playground (the strategies on that one workflow: what do we cook tonight? Dishes, Guests, Budget & time, Choose) and Sandbox (load, change, run, export). One diagram, one side panel for the clicked box, one bar with the runs. */
+/* Layout: a toggle between Playground (seven strategies on one workflow: what do we cook tonight? Dishes, Guests, Budget & time, Choose) and Sandbox (load, change, run, export). One diagram, one side panel for the clicked box, one bar with the runs. */
 :root{
   --page:#f0eee6; --card:#ffffff; --ink:#1f1e1b; --muted:#6f6c64; --line:#e3e0d6;
   --green-fill:#eef4e7; --green-line:#b7d29c; --green-ink:#5b8a30;
@@ -37,14 +37,6 @@ button,select,input,textarea{font:inherit;color:inherit} :focus-visible{outline:
 .wf .st{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:3px 10px;color:var(--muted)}
 .wf .st.on{border-color:var(--green-line);background:var(--green-fill);color:var(--green-ink);font-weight:600}
 .wf .ar{color:var(--arrow)}
-.planner{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-.planner h2{margin:0;font-size:17px} .planner h3{margin:14px 0 6px;font-size:14px}
-.ptabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);padding-bottom:8px}
-.ptabs button{border:0;background:transparent;padding:6px 12px;border-radius:999px;cursor:pointer;color:var(--muted);font-weight:500}
-.ptabs button[aria-selected="true"]{background:var(--page);color:var(--ink);box-shadow:0 0 0 1px var(--line)} .ptabs .n{font-family:var(--f-mono);font-size:12px;margin-right:6px}
-.tablebox{overflow-x:auto} .planner table{border-collapse:collapse;width:100%;font-size:13px} .planner th,.planner td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-.planner th{color:var(--muted);font-weight:600;font-size:12px} .planner td.num{font-family:var(--f-mono);text-align:right} .planner td.no{color:var(--bad);font-weight:600}
-.facts{display:flex;flex-wrap:wrap;gap:8px} .facts span{background:var(--page);border:1px solid var(--line);border-radius:8px;padding:6px 12px} .facts b{font-size:16px;margin-right:4px}
 .palette{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px}
 .palette span{font-size:12px;color:var(--muted)}
 .palette select{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
@@ -99,7 +91,7 @@ button,select,input,textarea{font:inherit;color:inherit} :focus-visible{outline:
 <div class="wrap">
   <div class="head">
     <h1>AI Strategy Playground</h1>
-    <div class="modes" role="group" aria-label="Mode"><button type="button" data-mode="plan">Dinner planner</button><button type="button" data-mode="play">Playground</button><button type="button" data-mode="sand">Sandbox</button></div>
+    <div class="modes" role="group" aria-label="Mode"><button type="button" data-mode="play">Playground</button><button type="button" data-mode="sand">Sandbox</button></div>
   </div>
   <div class="wf" id="wf" aria-label="The workflow"></div>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Strategies"></nav>
@@ -110,12 +102,7 @@ button,select,input,textarea{font:inherit;color:inherit} :focus-visible{outline:
     <button class="btn sm" type="button" data-add="in">In</button><button class="btn sm" type="button" data-add="llm">LLM call</button>
     <button class="btn sm" type="button" data-add="router">Router</button><button class="btn sm" type="button" data-add="gate">Gate</button><button class="btn sm" type="button" data-add="out">Out</button>
   </div>
-  <section class="card planner" id="planner" hidden aria-label="The example dashboard: the dinner planner">
-    <div class="phead"><div><h2>Dinner planner</h2><p class="hint">The example workflow dashboard, without AI: one tab per step. Its data (steps 1 to 3) is the In box of every strategy in the Playground.</p></div></div>
-    <nav class="ptabs" id="ptabs" role="tablist" aria-label="Steps of the workflow"></nav>
-    <div class="pbody" id="pbody"></div>
-  </section>
-  <div class="stage" id="stage">
+  <div class="stage">
     <section class="card diagram">
       <div class="svgbox"><svg class="d" id="svg" viewBox="0 0 1000 360" role="img" aria-label="Strategy diagram"></svg></div>
       <div class="bar">
@@ -413,7 +400,7 @@ const AUX_INFO={retrieval:"Searches the notes when the LLM asks.",tools:"A calcu
 /* ---------- saved state ---------- */
 const STORE="ai-playground-v5", MAXRUNS=30;
 const SAND_EMPTY=()=>({name:"My strategy",base:"",nodes:[IN(110,200),L("n2",470,200,"LLM call",{prompt:"{{input}}"}),OUT(830,200)],edges:[E("in","n2"),E("n2","out")],seq:3});
-let S={mode:"plan",ptab:"dishes",tab:"parallel",over:{},sandbox:null,runs:{},view:{},seq:0,knowledge:KNOWLEDGE,memory:[]};
+let S={mode:"play",tab:"parallel",over:{},sandbox:null,runs:{},view:{},seq:0,knowledge:KNOWLEDGE,memory:[]};
 try{ const s=JSON.parse(localStorage.getItem(STORE)||"null"); if(s) S=Object.assign(S,s); }catch(e){}
 if(!S.sandbox) S.sandbox=SAND_EMPTY(); if(!ORDER.includes(S.tab)) S.tab="parallel";
 function save(){ for(let i=0;i<5;i++){ try{ localStorage.setItem(STORE,JSON.stringify(S)); return; }catch(e){ const k=Object.keys(S.runs).sort((a,b)=>S.runs[b].length-S.runs[a].length)[0]; if(!k||!S.runs[k].length) return; S.runs[k].pop(); } } }
@@ -470,33 +457,14 @@ function bubblesSvg(by){ let h=""; const vb=VBH(), ring=graph().ring;
 /* ---------- top: mode, tabs, bar ---------- */
 function renderTop(){
   document.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===S.mode)));
-  const plan=S.mode==="plan"; $("planner").hidden=!plan; $("stage").hidden=plan;
-  $("tabs").hidden=sand()||plan; $("palette").hidden=!sand(); $("exportBtn").hidden=!sand(); $("dlRuns").hidden=!sand(); $("resetBtn").hidden=sand();
+  $("tabs").hidden=sand(); $("palette").hidden=!sand(); $("exportBtn").hidden=!sand(); $("dlRuns").hidden=!sand(); $("resetBtn").hidden=sand();
   $("tabs").innerHTML=ORDER.map(k=>`<button class="tab" type="button" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(PRESETS[k].name)}</button>`).join("");
   $("desc").textContent=sand()?"":PRESETS[S.tab].desc;
-  const on=plan?[1,2,3,4]:sand()?stepsUsed(S.sandbox):(PRESETS[S.tab].steps||[]);
-  $("wf").innerHTML=`<b>The workflow</b>`+WORKFLOW.map((w,i)=>`${i?`<span class="ar" aria-hidden="true">→</span>`:""}<span class="st ${on.includes(w.n)?"on":""}" title="${esc(w.what)}" ${plan?`data-ptab="${w.id}" role="button" tabindex="0" style="cursor:pointer"`:""}>${w.n} ${esc(w.label)}</span>`).join("")+`<span style="margin-left:6px">${plan?"The example dashboard below has one tab per step. Click a step to open its tab.":sand()?"Green: the steps your boxes do (Step, in the panel of a box).":"Every strategy decides on this same workflow. Step 1, the list of dishes, is in the In box; green: the steps its boxes do."}</span>`;
+  const on=sand()?stepsUsed(S.sandbox):(PRESETS[S.tab].steps||[]);
+  $("wf").innerHTML=`<b>The workflow</b>`+WORKFLOW.map((w,i)=>`${i?`<span class="ar" aria-hidden="true">→</span>`:""}<span class="st ${on.includes(w.n)?"on":""}" title="${esc(w.what)}">${w.n} ${esc(w.label)}</span>`).join("")+`<span style="margin-left:6px">${sand()?"Green: the steps your boxes do (Step, in the panel of a box).":"Every strategy decides on this same workflow. Step 1, the list of dishes, is in the In box; green: the steps its boxes do."}</span>`;
   $("startFrom").innerHTML=`<option value="">Empty</option>`+ORDER.map(k=>`<option value="${k}">${esc(PRESETS[k].name)}</option>`).join("");
-  renderRuns(); if(plan) renderPlanner();
+  renderRuns();
 }
-/* ---------- the example dashboard: the dinner planner, without AI ---------- */
-const okFor=(g,d)=>!d.tags.some(t=>g.avoid.includes(t));
-const fits=d=>d.cost<=DINNER.budget&&d.min<=DINNER.minutes;
-function plannerTab(id){
-  if(id==="dishes") return `<p class="hint">Step 1 · What we can cook: cost for four people, time, kitchen, taste and ingredients.</p><div class="tablebox"><table><thead><tr><th>Dish</th><th>€</th><th>Min</th><th>Kitchen</th><th>Taste</th><th>Ingredients</th></tr></thead><tbody>${DISHES.map(d=>`<tr><td>${esc(d.name)}</td><td class="num">${d.cost}</td><td class="num">${d.min}</td><td>${esc(d.kitchen)}</td><td>${esc(d.taste)}</td><td>${esc(d.ingredients)}</td></tr>`).join("")}</tbody></table></div>`;
-  if(id==="guests") return `<p class="hint">Step 2 · Who comes, what they cannot eat, and what they like.</p><div class="tablebox"><table><thead><tr><th>Guest</th><th>Diet</th><th>Preference</th></tr></thead><tbody>${GUESTS.map(g=>`<tr><td>${esc(g.name)}</td><td>${esc(g.diet)}</td><td>${esc(g.likes)}</td></tr>`).join("")}</tbody></table></div>
-    <h3>Who can eat what (the recipe as it is)</h3><div class="tablebox"><table><thead><tr><th>Dish</th>${GUESTS.map(g=>`<th>${esc(g.name)}</th>`).join("")}</tr></thead><tbody>${DISHES.map(d=>`<tr><td>${esc(d.name)}</td>${GUESTS.map(g=>okFor(g,d)?"<td>OK</td>":`<td class="no">no</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
-  if(id==="budget") return `<p class="hint">Step 3 · What fits tonight.</p><div class="facts"><span><b>€${DINNER.budget}</b>in total</span><span><b>${DINNER.minutes}</b>minutes</span><span><b>${esc(DINNER.kitchen)}</b></span></div>
-    <h3>Which dishes fit</h3><div class="tablebox"><table><thead><tr><th>Dish</th><th>€</th><th>Budget</th><th>Min</th><th>Time</th><th>Kitchen</th></tr></thead><tbody>${DISHES.map(d=>`<tr><td>${esc(d.name)}</td><td class="num">${d.cost}</td>${d.cost<=DINNER.budget?"<td>within</td>":`<td class="no">over</td>`}<td class="num">${d.min}</td>${d.min<=DINNER.minutes?"<td>in time</td>":`<td class="no">too long</td>`}<td>${esc(d.kitchen)}</td></tr>`).join("")}</tbody></table></div>`;
-  if(id==="choose"){ const both=DISHES.filter(d=>GUESTS.every(g=>okFor(g,d))&&fits(d));
-    return `<p class="hint">Step 4 · The decision: one dish for everyone. Without AI, these dishes pass step 2 (as the recipe is) and step 3. Which one, and would a changed recipe be better? That is the decision every AI strategy makes.</p>
-    <div class="tablebox"><table><thead><tr><th>Dish</th><th>€</th><th>Min</th><th>Taste</th><th>Ingredients</th></tr></thead><tbody>${both.map(d=>`<tr><td>${esc(d.name)}</td><td class="num">${d.cost}</td><td class="num">${d.min}</td><td>${esc(d.taste)}</td><td>${esc(d.ingredients)}</td></tr>`).join("")}</tbody></table></div>
-    <p style="margin-top:12px"><button class="btn run" type="button" id="toPlay">See how the AI strategies choose</button></p>`; }
-  return ""; }
-function renderPlanner(){ const t=S.ptab||"dishes";
-  $("ptabs").innerHTML=WORKFLOW.map(w=>`<button type="button" role="tab" data-ptab="${w.id}" aria-selected="${t===w.id}"><span class="n">${w.n}</span>${esc(w.label)}</button>`).join("");
-  $("pbody").innerHTML=plannerTab(t); const b=$("toPlay"); if(b) b.onclick=()=>{ S.mode="play"; save(); refresh(); }; }
-document.addEventListener("click",e=>{ const b=e.target.closest("[data-ptab]"); if(!b||S.mode!=="plan") return; S.ptab=b.dataset.ptab; save(); renderTop(); });
 function stepsUsed(g){ const s=new Set(); g.nodes.forEach(n=>{ const m=String(n.cfg&&n.cfg.step||"").match(/(\d)(?:\s*[–-]\s*(\d))?/); if(m){ const a=+m[1], b=+(m[2]||m[1]); for(let k=a;k<=b;k++) s.add(k); } }); return [...s]; }
 function renderRuns(){ const L2=runsList(), cur=shown();
   $("runs").innerHTML = L2.length ? L2.map(r=>`<option value="${esc(r.run_id)}" ${cur&&!live&&cur.run_id===r.run_id?"selected":""}>Run ${esc(r.run_id)} · ${esc(new Date(r.date_time).toLocaleString([],{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}))}${r.error?" · error":""}</option>`).join("") : `<option value="">No runs yet</option>`;
