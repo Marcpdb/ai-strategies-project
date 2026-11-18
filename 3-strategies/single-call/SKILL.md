@@ -24,12 +24,6 @@ Follow `reference/build-dashboard.md`, with the dashboard in `dashboard/` of thi
 
 ## Then: the evaluation
 
-The dashboard has an Evaluation test dropdown next to Run (5 tests, 3 runs each). Each button makes its own change automatically and logs it; see `reference/evaluation.md`. The student runs every test, clicks Download log and types "sync". When all 5 tests are done, "findings" codes every run and writes `findings.md` in each folder of `evaluation/`:
+The student evaluates the dashboard by hand: they change the input (click In) or a box's prompt or model (click the box) themselves, give every run a title in the small box next to **Run** (for example "Baseline" or "Vary input: budget €20"), and run. Every run is logged; see `reference/evaluation.md`. After each run the log is downloaded; the student types "sync". When they say "findings", Claude groups the runs by title, names the evaluation method of each title with the student, and writes `evaluation/<title>/findings.md`, each compared with the baseline runs.
 
-| Folder | Test | Step |
-|---|---|---|
-| `1-baseline-stability` | Baseline | Document and Compare (TIA) |
-| `2-vary-wording` | Wording | Vary (systematic prompt variation) |
-| `3-vary-fact` | Fact | Vary (counterfactual prompting) |
-| `4-vary-boundary` | Boundary | Vary (boundary testing) |
-| `5-compare-models` | Models | Compare (CSA, models) |
+Single call has one LLM box, so the method Agents (ISIA) does not apply to it.

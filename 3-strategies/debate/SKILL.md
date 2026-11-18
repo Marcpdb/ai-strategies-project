@@ -5,7 +5,7 @@ description: "Builds the AI dashboard for the Debate strategy: the student's man
 
 # Debate: build the AI dashboard
 
-Several debaters answer each other in rounds; a judge reads the whole discussion and decides.
+Several debaters answer each other in rounds; a judge reads the whole discussion and decides. A debater can speak for one step of the workflow, or for one possible outcome.
 
 This folder turns the student's manual dashboard (`2-manual-dashboard/dashboard.html`) and their export (`export/strategy.md`) into an AI-assisted dashboard that uses this strategy for the final decision of their workflow.
 
@@ -18,18 +18,10 @@ This folder turns the student's manual dashboard (`2-manual-dashboard/dashboard.
 
 Follow `reference/build-dashboard.md`, with the dashboard in `dashboard/` of this folder. For this strategy:
 
-- Each debater usually belongs on the tab of the view it stands for; the judge on the tab where its advice is used (or none: its advice shows under the flow).
+- The playground has two Debate examples; both export as Debate (the line "Based on:" says which). In **Debate (steps)** each debater speaks for one step of the workflow: put it on the tab of that step. In **Debate (dishes)** each debater defends one possible outcome (one dish): those debaters work on the decision itself, so put them on the tab of the decision. The judge goes on the tab where its advice is used (or none: its advice shows under the flow).
+- With more than four debaters the dashboard draws a larger circle by itself.
 - Keep the number of rounds from the export. Show the discussion per round.
 
 ## Then: the evaluation
 
-The dashboard has an Evaluation test dropdown next to Run (6 tests, 3 runs each). Each button makes its own change automatically and logs it; see `reference/evaluation.md`. The student runs every test, clicks Download log and types "sync". When all 6 tests are done, "findings" codes every run and writes `findings.md` in each folder of `evaluation/`:
-
-| Folder | Test | Step |
-|---|---|---|
-| `1-baseline-stability` | Baseline | Document and Compare (TIA) |
-| `2-vary-wording` | Wording | Vary (systematic prompt variation) |
-| `3-vary-fact` | Fact | Vary (counterfactual prompting) |
-| `4-vary-boundary` | Boundary | Vary (boundary testing) |
-| `5-compare-models` | Models | Compare (CSA, models) |
-| `6-compare-agents` | Agents | Compare (ISIA, multi-agent only) |
+The student evaluates the dashboard by hand: they change the input (click In) or a box's prompt or model (click the box) themselves, give every run a title in the small box next to **Run** (for example "Baseline" or "Vary input: budget €20"), and run. Every run is logged; see `reference/evaluation.md`. After each run the log is downloaded; the student types "sync". When they say "findings", Claude groups the runs by title, names the evaluation method of each title with the student, and writes `evaluation/<title>/findings.md`, each compared with the baseline runs.

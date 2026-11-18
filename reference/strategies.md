@@ -4,7 +4,7 @@ The engine in `1-playground/playground.html` (between `ENGINE START` and `ENGINE
 
 ## From "Boxes" to nodes and edges
 
-Every `### <name>` is one node:
+Every `### <name>` is one node (in the playground a box also has a workflow step, shown under its name; it is not exported: the "Tab of my dashboard" line takes its place):
 
 - `id`: the name in lower case, letters and digits only, joined with `-` (Budget & time → `budget-time`, Chloé → `chloe`).
 - `label`: the name. `type`: from "Type" (the first word).
@@ -26,7 +26,7 @@ Every `### <name>` is one node:
 | gate | A check in code, not an LLM: passes when the text has at most `maxWords` words; when it fails, the flow follows the line labelled "Fail" |
 | orchestrator | An LLM call that plans sub-tasks, one per worker it connects to; extra workers are skipped |
 | evaluator | An LLM call that accepts or rejects what flows in. On reject, the box its loop line points to runs again with `{{feedback}}`, up to `maxRounds` |
-| debater | All debaters speak in every round, at the same time, with `{{debate}}` = everything said so far; `rounds` sets the number of rounds. They answer each other |
+| debater | All debaters speak in every round, at the same time, with `{{debate}}` = everything said so far; `rounds` sets the number of rounds. They answer each other. A debater can stand for one step of the workflow (Debate (steps)) or for one possible outcome (Debate (dishes)) |
 | aux | Retrieval, Tools or Memory, drawn under an LLM. They light up when that LLM uses the tool |
 
 ## Placeholders in prompts

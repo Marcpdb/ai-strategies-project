@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 330" width="1200" height="330" font-family="Inter, system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <title>The workflow: what do we cook tonight?</title>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1,1 L8,5 L1,9" fill="none" stroke="#a7a49c" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="330" fill="#f0eee6"/>
+  <rect x="16" y="16" width="1168" height="298" rx="10" fill="#ffffff" stroke="#e3e0d6"/>
+
+  <text x="40" y="54" font-size="20" font-weight="600" fill="#1f1e1b">The workflow: what do we cook tonight?</text>
+  <text x="40" y="78" font-size="13" fill="#6f6c64">Four friends come for dinner and we cook one dish for everyone. Every AI strategy decides on this same workflow.</text>
+
+  <!-- lines -->
+  <g fill="none" stroke="#a7a49c" stroke-width="1.6" marker-end="url(#ah)">
+    <path d="M131,170 L164,170"/>
+    <path d="M356,170 L389,170"/>
+    <path d="M581,170 L614,170"/>
+    <path d="M806,170 L839,170"/>
+    <path d="M1031,170 L1064,170"/>
+  </g>
+
+  <!-- In -->
+  <rect x="40" y="145" width="84" height="50" rx="25" fill="#f8e8e1" stroke="#e8b7a4" stroke-width="1.2"/>
+  <text x="82" y="170" font-size="17" font-weight="600" fill="#c2572f" text-anchor="middle" dominant-baseline="central">Case</text>
+
+  <!-- steps -->
+  <g text-anchor="middle">
+    <rect x="172" y="140" width="180" height="60" rx="3" fill="#eef4e7" stroke="#b7d29c" stroke-width="1.2"/>
+    <text x="262" y="163" font-size="17" font-weight="600" fill="#5b8a30" dominant-baseline="central">1 Dishes</text>
+    <text x="262" y="183" font-size="11" font-weight="500" fill="#6f6c64" dominant-baseline="central">what we can cook</text>
+
+    <rect x="397" y="140" width="180" height="60" rx="3" fill="#eef4e7" stroke="#b7d29c" stroke-width="1.2"/>
+    <text x="487" y="163" font-size="17" font-weight="600" fill="#5b8a30" dominant-baseline="central">2 Guests</text>
+    <text x="487" y="183" font-size="11" font-weight="500" fill="#6f6c64" dominant-baseline="central">diets and preferences</text>
+
+    <rect x="622" y="140" width="180" height="60" rx="3" fill="#eef4e7" stroke="#b7d29c" stroke-width="1.2"/>
+    <text x="712" y="163" font-size="17" font-weight="600" fill="#5b8a30" dominant-baseline="central">3 Budget &amp; time</text>
+    <text x="712" y="183" font-size="11" font-weight="500" fill="#6f6c64" dominant-baseline="central">what fits tonight</text>
+
+    <rect x="847" y="140" width="180" height="60" rx="3" fill="#fbefd9" stroke="#d38a22" stroke-width="2" stroke-dasharray="5 3"/>
+    <text x="937" y="163" font-size="17" font-weight="600" fill="#a86414" dominant-baseline="central">4 Choose</text>
+    <text x="937" y="183" font-size="11" font-weight="500" fill="#6f6c64" dominant-baseline="central">the decision</text>
+  </g>
+
+  <!-- Out -->
+  <rect x="1072" y="145" width="90" height="50" rx="25" fill="#f8e8e1" stroke="#e8b7a4" stroke-width="1.2"/>
+  <text x="1117" y="170" font-size="17" font-weight="600" fill="#c2572f" text-anchor="middle" dominant-baseline="central">Dish</text>
+
+  <!-- what each step uses -->
+  <g font-size="12.5" fill="#1f1e1b" text-anchor="middle">
+    <text x="262" y="226">18 dishes: ingredients,</text>
+    <text x="262" y="243">€ for four, minutes, oven/hobs</text>
+    <text x="487" y="226">Anna, Ben, Chloé, David:</text>
+    <text x="487" y="243">vegetarian, nuts, mushrooms, lactose</text>
+    <text x="712" y="226">€30 in total, 45 minutes,</text>
+    <text x="712" y="243">one oven, two hobs</text>
+    <text x="937" y="226">one dish for everyone,</text>
+    <text x="937" y="243">with any change to the recipe</text>
+  </g>
+
+  <!-- where the AI comes in -->
+  <path d="M937,262 L937,280" stroke="#d38a22" stroke-width="1.4" fill="none"/>
+  <text x="937" y="296" font-size="12.5" font-weight="600" fill="#a86414" text-anchor="middle">Here the AI strategies come in</text>
+  <text x="40" y="296" font-size="12" fill="#6f6c64">Steps 1–3 are the data of the dashboard; the AI strategies do step 4, often by redoing steps 2–3 on the way.</text>
+</svg>
