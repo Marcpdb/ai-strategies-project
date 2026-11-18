@@ -96,7 +96,7 @@ button,select,input,textarea{font:inherit;color:inherit} :focus-visible{outline:
   <div class="wf" id="wf" aria-label="The workflow"></div>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Strategies"></nav>
   <div class="palette" id="palette" hidden>
-    <span>Start from</span><select id="startFrom"></select><button class="btn sm" type="button" id="loadBtn">Load</button>
+    <span>Start from</span><select id="startFrom"></select><button class="btn sm" type="button" id="loadBtn">Load</button><span class="hint" id="loadNote">replaces what is in the Sandbox now</span>
     
     <span style="margin-left:10px">Add</span>
     <button class="btn sm" type="button" data-add="in">In</button><button class="btn sm" type="button" data-add="llm">Agent</button>
@@ -195,6 +195,16 @@ const ENGINE = (() => {
       return t;
     }
 
+    /* at most 3 calls to Claude at the same time (a debate of 8 would otherwise hit the rate limit),
+       and a short wait and retry when Claude still answers "rate_limited" */
+    let active=0; const waiting=[];
+    const acquire=()=>active<3?(active++,Promise.resolve()):new Promise(r=>waiting.push(r));
+    const release=()=>{ const nx=waiting.shift(); if(nx) nx(); else active--; };
+    const pause=ms=>new Promise((res,rej)=>{ const t=setTimeout(res,ms); if(ctx.signal) ctx.signal.addEventListener("abort",()=>{ clearTimeout(t); rej({code:"cancelled"}); },{once:true}); });
+    async function ask(nd,prompt,opts){ await acquire();
+      try{ for(let a=0;;a++){ try{ return await ctx.sample(prompt,opts); }
+          catch(e){ if(!(e&&e.code==="rate_limited")||a>=3||(ctx.signal&&ctx.signal.aborted)) throw e; H.bubble(nd.id,{text:"Busy: trying again…"}); await pause(2000*Math.pow(2,a)); } } }
+      finally{ release(); } }
     async function call(nd, prompt, {json=false, shownInput="", round=null}={}){
       if(!ctx.sample) throw {code:"not_granted"};
       const c=nd.cfg, mid=modelOf(c);
@@ -205,7 +215,7 @@ const ENGINE = (() => {
       if(T.length){ if(ctx.toolsOK) opts.tools=T; else usePrompt+=(c.tools.includes("retrieval")?"\n\nNotes:\n"+ctx.knowledge:"")+(c.tools.includes("memory")?"\n\nMemory:\n"+((ctx.memory||[]).join("\n")||"(empty)"):""); }
       const s=addStep({id:nd.id,label:nd.label,type:nd.type,round,model_asked:mid||"(tier "+tierOf(c)+")",model_answered:"",effort:c.effort||"default",tools:(c.tools||[]).join(", "),input:shownInput,prompt:usePrompt,output:"",t_start:now(),t_end:null,tokens_in:toks(usePrompt),tokens_out:0});
       let r;
-      try{ r=await ctx.sample(usePrompt,opts); }
+      try{ r=await ask(nd,usePrompt,opts); }
       catch(e){ H.status(nd.id,e&&e.code==="cancelled"?"":"error"); H.bubble(nd.id,null); s.output="Error: "+((e&&e.code)||"failed"); s.t_end=now(); H.step(s); throw e; }
       s.output=r.text; s.t_end=now(); s.tokens_out=toks(r.text);
       s.model_answered = r.modelApplied ? r.modelApplied : ("not "+(mid||"named")+": a "+r.modelTierApplied+"-tier model");
@@ -394,7 +404,7 @@ const PRESETS={
     edges:[...FINALISTS.map((d,i)=>E("in","d"+(i+1),{hide:1})),...FINALISTS.map((d,i)=>E("d"+(i+1),"d"+((i+1)%8+1),{hide:1})),...FINALISTS.map((d,i)=>E("d"+(i+1),"host",{hide:1})),E("host","out")]}
 };
 const ORDER=["augmented","chain","routing","parallel","orchestrator","evaluator","debate","debate2"];
-const TYPE_INFO={in:"What goes into the strategy",out:"The result",llm:"Agent",worker:"Worker: does one sub-task of the orchestrator",router:"Router: sends the case to one specialist",gate:"Gate: a simple check in code, not an agent",orchestrator:"Orchestrator: plans sub-tasks for the workers it connects to",evaluator:"Evaluator: checks against criteria, accepts or sends feedback",debater:"Debater: argues every round and answers the others"};
+const TYPE_INFO={in:"What goes into the strategy",out:"The result",llm:"Agent",worker:"Worker: does one sub-task of the orchestrator",router:"Router: sends the case to one specialist",gate:"Gate: a simple check in code, not an agent",orchestrator:"Orchestrator: plans sub-tasks for the workers it connects to",evaluator:"Evaluator: checks against criteria, accepts or sends feedback",debater:"Agent in a debate: speaks every round and answers the other agents"};
 const AUX_INFO={retrieval:"Searches the notes when the agent asks.",tools:"A calculator the agent can call.",memory:"Notes that stay between runs, in this browser."};
 
 /* ---------- saved state ---------- */
@@ -481,10 +491,14 @@ const PH=["{{input}}","{{question}}","{{subtask}}","{{feedback}}","{{debate}}"];
 function template(k){ const P=PRESETS[k], g=clone({nodes:P.nodes,edges:P.edges,ring:P.ring||undefined,vbh:P.vbh||undefined}); let a=0;
   g.nodes.forEach(n=>{ if(n.type==="in") n.cfg.input="";
     if(n.cfg&&typeof n.cfg.prompt==="string"){ const ph=PH.filter(x=>n.cfg.prompt.includes(x)).sort((x,y)=>n.cfg.prompt.indexOf(x)-n.cfg.prompt.indexOf(y)); n.cfg.prompt=(ph.length?ph:["{{input}}"]).join("\n\n"); }
-    if(n.type==="debater") n.label="Actor "+(++a);
+    if(n.type==="debater") n.label="Agent "+(++a);
     if(n.cfg) delete n.cfg.step; });
+  if(g.ring) g.ring.label=(P.nodes.find(n=>n.type==="debater").cfg.rounds||2)+" rounds: the agents answer each other";
   return Object.assign({name:P.name+" (my version)",base:k,seq:1},g); }
-$("loadBtn").addEventListener("click",()=>{ if(running) return; editing=null; const k=$("startFrom").value; S.sandbox = k ? template(k) : SAND_EMPTY(); selected=null; selEdge=null; save(); refresh(); $("msg").textContent=k?"Template loaded: write your own input and prompts.":"Sandbox emptied."; });
+let undoSand=null;
+$("loadBtn").addEventListener("click",()=>{ if(running) return; editing=null; const k=$("startFrom").value; undoSand=clone(S.sandbox); S.sandbox = k ? template(k) : SAND_EMPTY(); selected=null; selEdge=null; save(); refresh();
+  $("msg").innerHTML=esc(k?"Template loaded: write your own input and prompts. Your previous sandbox was replaced.":"Sandbox emptied.")+` <button class="btn sm" type="button" id="undoLoad">Undo</button>`;
+  $("undoLoad").onclick=()=>{ if(running||!undoSand) return; S.sandbox=undoSand; undoSand=null; selected=null; selEdge=null; save(); refresh(); $("msg").textContent="Your previous sandbox is back."; }; });
 
 /* ---------- side panel: settings of the clicked box, and what went in and out ---------- */
 function stepsOf(id){ const r=shown(); return r&&r.steps?r.steps.filter(s=>s.id===id):[]; }
@@ -499,7 +513,7 @@ function renderPanel(){
       <label class="f"><span>Your strategy file</span><textarea id="edMd" rows="26" spellcheck="true">${esc(editing.md)}</textarea></label>
       <div style="display:flex;gap:8px"><button class="btn run" type="button" id="edSave">Download</button><button class="btn" type="button" id="edClose">Close</button></div>`;
     $("edMd").oninput=e=>{ editing.md=e.target.value; editing.dirty=true; (S.drafts ||= {})[editing.name]=editing.md; save(); };
-    $("edSave").onclick=async()=>{ await download(editing.name,editing.md); editing.dirty=false; const m=$("msg"); if(/^Saved/.test(m.textContent)) m.textContent+=" Then type sync in Claude Code: it moves the file from your Downloads folder to the folder of its strategy."; renderPanel(); };
+    $("edSave").onclick=async()=>{ await download(editing.name,editing.md); editing.dirty=false; const m=$("msg"); if(/^Saved/.test(m.textContent)) m.textContent+=" Then type sync in Claude Code: it copies the file from your Downloads folder to the folder of its strategy."; renderPanel(); };
     $("edClose").onclick=()=>{ if(editing.dirty&&!$("edClose").dataset.sure){ $("edClose").dataset.sure="1"; $("edClose").textContent="Close without downloading"; return; } editing=null; renderPanel(); };
     return; }
   if(sb&&selEdge!=null&&g.edges[selEdge]){ const e=g.edges[selEdge];
@@ -518,27 +532,45 @@ function renderPanel(){
       <label class="f"><span>Effort</span><select id="fEffort">${[["","Default"],["low","Low"],["medium","Medium"],["high","High"]].map(([v,t])=>`<option value="${v}" ${v===(c.effort||"")?"selected":""}>${t}</option>`).join("")}</select></label></div>
       ${c.model==="custom"?`<label class="f"><span>Model ID</span><input type="text" id="fCustom" value="${esc(c.customId||"")}" placeholder="e.g. claude-haiku-4-5"></label>`:""}
       <label class="f"><span>Prompt</span><textarea id="fPrompt" rows="8">${esc(c.prompt)}</textarea></label>
-      <p class="hint">{{input}} what flows in · {{question}} the In text${nd.type==="worker"?" · {{subtask}}":""}${g.nodes.some(n=>n.type==="debater")?" · {{debate}}":""}${g.edges.some(e=>e.loop&&e.to===nd.id)?" · {{feedback}}":""}</p>
+      <p class="hint">The parts in {{ }} are fixed: you cannot change or remove them. {{input}} what flows in · {{question}} the In text${nd.type==="worker"?" · {{subtask}}":""}${g.nodes.some(n=>n.type==="debater")?" · {{debate}}":""}${g.edges.some(e=>e.loop&&e.to===nd.id)?" · {{feedback}}":""}</p>
       ${nd.type==="evaluator"?`<label class="f"><span>Maximum rounds</span><input type="number" id="fRounds" min="1" max="5" value="${esc(c.maxRounds||3)}"></label>`:""}
-      ${nd.type==="debater"?`<label class="f"><span>Rounds (all debaters)</span><input type="number" id="fDeb" min="1" max="5" value="${esc(c.rounds||2)}"></label>`:""}
+      ${nd.type==="debater"?`<label class="f"><span>Rounds (all agents in the debate)</span><input type="number" id="fDeb" min="1" max="5" value="${esc(c.rounds||2)}"></label>`:""}
       <div class="f"><span>Tools</span><div class="checks">${[["retrieval","Retrieval"],["calculator","Calculator"],["memory","Memory"]].map(([k,t])=>`<label><input type="checkbox" data-tool="${k}" ${(c.tools||[]).includes(k)?"checked":""}>${t}</label>`).join("")}</div></div>`;
   }
   h+=ioHtml(nd.id);
   if(sb&&nd.type!=="aux") h+=`<button class="btn sm" type="button" id="delNode">Delete box</button>`;
   P.innerHTML=h; bind(nd);
 }
+/* the placeholders in a prompt ({{input}}, {{question}}, ...) cannot be changed or removed: an edit that would do so is undone */
+function lockPlaceholders(ta,onOk,onBlocked){ let prev=ta.value;
+  const count=v=>{ const c={}; (v.match(/\{\{(input|question|subtask|feedback|debate)\}\}/g)||[]).forEach(t=>c[t]=(c[t]||0)+1); return c; };
+  ta.addEventListener("input",()=>{ const a=count(prev), b=count(ta.value);
+    if(Object.keys(a).some(t=>(b[t]||0)<a[t])){ const pos=Math.max(0,ta.selectionStart-(ta.value.length-prev.length)); ta.value=prev; ta.selectionStart=ta.selectionEnd=Math.min(pos,prev.length); if(onBlocked) onBlocked(); return; }
+    prev=ta.value; onOk(prev); }); }
 function bind(nd){
   const on=(id,k,fn)=>{ const el=$(id); if(el) el.addEventListener("input",e=>{ setCfg(nd,k,fn?fn(e.target.value):e.target.value); render(); }); };
-  on("fLabel","label",v=>v||"Box"); on("fInput","input"); on("fPrompt","prompt"); on("fStep","step"); const fs=$("fStep"); if(fs) fs.addEventListener("input",()=>renderTop()); on("fCustom","customId");
+  on("fLabel","label",v=>v||"Box"); on("fInput","input"); on("fCustom","customId");
+  const fp=$("fPrompt"); if(fp) lockPlaceholders(fp,v=>{ setCfg(nd,"prompt",v); render(); },()=>{ const m=$("msg"); m.classList.remove("err"); m.textContent="The parts in {{ }} are fixed: they tell the engine where the input goes."; });
   on("fMax","maxWords",v=>Math.max(1,parseInt(v)||1)); on("fRounds","maxRounds",v=>Math.max(1,Math.min(5,parseInt(v)||1)));
   const fd=$("fDeb"); if(fd) fd.addEventListener("input",e=>{ const v=Math.max(1,Math.min(5,parseInt(e.target.value)||1)); graph().nodes.filter(n=>n.type==="debater").forEach(n=>setCfg(n,"rounds",v)); });
   const fm=$("fModel"); if(fm) fm.addEventListener("change",e=>{ setCfg(nd,"model",e.target.value); render(); renderPanel(); });
   const fe=$("fEffort"); if(fe) fe.addEventListener("change",e=>setCfg(nd,"effort",e.target.value));
-  document.querySelectorAll("[data-tool]").forEach(cb=>cb.addEventListener("change",()=>{ setCfg(nd,"tools",[...document.querySelectorAll("[data-tool]:checked")].map(x=>x.dataset.tool)); render(); }));
+  document.querySelectorAll("[data-tool]").forEach(cb=>cb.addEventListener("change",()=>{ setCfg(nd,"tools",[...document.querySelectorAll("[data-tool]:checked")].map(x=>x.dataset.tool)); if(sand()) toolBoxes(nd); save(); render(); }));
   const k=$("fKnow"); if(k) k.addEventListener("input",e=>{ S.knowledge=e.target.value; save(); });
   const cm=$("clearMem"); if(cm) cm.onclick=()=>{ S.memory=[]; save(); renderPanel(); };
-  const dn=$("delNode"); if(dn) dn.onclick=()=>{ const sb=S.sandbox; sb.nodes=sb.nodes.filter(x=>x.id!==nd.id); sb.edges=sb.edges.filter(e=>e.from!==nd.id&&e.to!==nd.id); if(sb.ring&&!sb.nodes.some(n=>n.type==="debater")) delete sb.ring; selected=null; save(); render(); renderPanel(); };
+  const dn=$("delNode"); if(dn) dn.onclick=()=>{ const sb=S.sandbox; sb.nodes=sb.nodes.filter(x=>x.id!==nd.id&&!(x.type==="aux"&&x.owner===nd.id)); sb.edges=sb.edges.filter(e=>e.from!==nd.id&&e.to!==nd.id); if(sb.ring&&!sb.nodes.some(n=>n.type==="debater")) delete sb.ring; selected=null; save(); render(); renderPanel(); };
 }
+
+/* in the sandbox, every tool of an agent is a box under it (Retrieval, Calculator, Memory), with its two dashed lines */
+const TOOL_BOX={retrieval:["retrieval","Retrieval","Query","Results",-180],calculator:["tools","Calculator","Call","Response",0],memory:["memory","Memory","Read","Write",180]};
+function toolBoxes(nd){ const sb=S.sandbox, want=(nd.cfg.tools||[]).map(t=>TOOL_BOX[t][0]);
+  const mine=n=>n.type==="aux"&&(n.owner===nd.id||sb.edges.some(e=>(e.from===nd.id&&e.to===n.id)||(e.to===nd.id&&e.from===n.id)));
+  sb.nodes.filter(n=>mine(n)&&!want.includes(n.aux)).forEach(n=>{ sb.nodes=sb.nodes.filter(x=>x!==n); sb.edges=sb.edges.filter(e=>e.from!==n.id&&e.to!==n.id); });
+  (nd.cfg.tools||[]).forEach(t=>{ const [aux,label,a,b,dx]=TOOL_BOX[t]; if(sb.nodes.some(n=>mine(n)&&n.aux===aux)) return;
+    let id; do{ id="t"+(++sb.seq); }while(sb.nodes.some(n=>n.id===id));
+    const below=nd.y+150<=VBH()-40, x=Math.max(80,Math.min(920,nd.x+dx)), y=below?nd.y+150:Math.max(40,nd.y-150);
+    sb.nodes.push({id,type:"aux",aux,owner:nd.id,x,y,w:150,h:56,label,cfg:{}});
+    sb.edges.push({from:nd.id,to:id,label:a,bend:-28,dash:1},{from:id,to:nd.id,label:b,bend:-28,dash:1}); }); }
 
 /* ---------- editing on the diagram (sandbox) ---------- */
 function svgPoint(evt){ const pt=svg.createSVGPoint(); pt.x=evt.clientX; pt.y=evt.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
@@ -604,8 +636,8 @@ async function download(name,data){ const m=$("msg"); m.classList.remove("err");
   try{ const dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null; if(dl){ await dl.save({filename:name,data}); m.textContent="Saved "+name+"."; return; } }catch(e){ if(e&&e.code){ m.textContent="Not saved."; return; } }
   try{ await navigator.clipboard.writeText(data); m.textContent="Download is not available here, so "+name+" was copied."; }catch(e){ m.textContent="Download is not available in this view."; } }
 const slug=s=>String(s||"strategy").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"strategy";
-$("dlRuns").addEventListener("click",()=>{ const L2=runsList(); if(!L2.length){ $("msg").textContent="No runs yet."; return; } download("runs-"+slug(S.sandbox.name)+".json",JSON.stringify({exported:new Date().toISOString(),strategy:S.sandbox.name,runs:L2},null,2)); });
-/* Export: the file opens here to be filled in, then it is downloaded. "sync" in Claude Code moves it from Downloads
+$("dlRuns").addEventListener("click",()=>{ const L2=runsList(); if(!L2.length){ $("msg").textContent="No runs yet."; return; } download("runs-"+slug(S.sandbox.name)+"-"+new Date().toISOString().slice(0,19).replace(/[-:T]/g,"").replace(/^(\d{8})/,"$1-")+".json",JSON.stringify({exported:new Date().toISOString(),strategy:S.sandbox.name,runs:L2},null,2)); });
+/* Export: the file opens here to be filled in, then it is downloaded. "sync" in Claude Code copies it from Downloads
    to the folder of its strategy. Exporting the same strategy again keeps the answers already filled in (kept in this browser). */
 function keepFilled(oldMd,newMd){ const FILL="_(fill in)_", old={}; let box="";
   const key=l=>{ const h=l.match(/^### (.+)/); if(h) box=h[1].trim(); else if(/^## /.test(l)) box=""; const m=l.match(/^- ([^:]+): (.*)$/); return m?[box+"|"+m[1],m[1],m[2].trim()]:null; };

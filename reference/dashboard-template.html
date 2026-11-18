@@ -324,7 +324,7 @@ function renderAdvice(){
 }
 const logJSON=()=>JSON.stringify({strategy:STRATEGY.strategy,version:STRATEGY.version,original_input:ORIG_INPUT,original_boxes:G.nodes.filter(n=>LLM_TYPES.includes(n.type)).map(n=>({id:n.id,label:n.label,type:n.type,model:n.cfg.model,prompt:n.cfg.prompt})),runs:ST.log.map(l=>{ const r={...l}; delete r.status; delete r.labels; delete r.hot; return r; })},null,2);
 /* saves both log files (every run so far); also called automatically when a test finishes */
-async function saveLog(){ if(!ST.log.length){ $("msg").textContent="No runs yet."; return false; } await download(logName()+".csv",csv()); await download(logName()+".json",logJSON()); const ok=/^Saved/.test($("msg").textContent); if(ok) $("msg").textContent="Saved "+logName()+".csv and .json. Type sync in Claude Code."; return ok; }
+async function saveLog(){ if(!ST.log.length){ $("msg").textContent="No runs yet."; return false; } const d=new Date(), z=n=>String(n).padStart(2,"0"); logStamp=d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+"-"+z(d.getHours())+z(d.getMinutes())+z(d.getSeconds()); await download(logName()+".csv",csv()); await download(logName()+".json",logJSON()); const ok=/^Saved/.test($("msg").textContent); if(ok) $("msg").textContent="Saved "+logName()+".csv and .json: all "+ST.log.length+" runs so far. Type sync in Claude Code."; return ok; }
 $("dlLog").addEventListener("click",()=>saveLog());
 $("runSel").addEventListener("change",e=>{ ST.review=e.target.value===""?null:+e.target.value; save(); restore(ST.review!=null?ST.log[ST.review]:null); render(); });
 
@@ -354,10 +354,17 @@ function inCard(){ return `<div class="agent incard"><div class="abox io"><b>In<
 function editHtml(n){ const o=ST.over[n.id]||{}, model=o.model||n.cfg.model, prompt=o.prompt!=null?o.prompt:n.cfg.prompt, ch=boxChanged(n.id);
   return `<details class="edit" ${ch?"open":""}><summary>Prompt and model${ch?` <span class="chg">changed</span>`:""}</summary>
     <label class="f"><span>Model</span><select data-model="${esc(n.id)}">${MODELS.map(([v,t])=>`<option value="${v}" ${v===model?"selected":""}>${t}</option>`).join("")}${MODELS.some(([v])=>v===model)?"":`<option value="${esc(model)}" selected>${esc(model)}</option>`}</select></label>
-    <label class="f"><span>Prompt</span><textarea rows="6" data-prompt="${esc(n.id)}">${esc(prompt)}</textarea></label>
+    <label class="f"><span>Prompt (the parts in {{ }} are fixed)</span><textarea rows="6" data-prompt="${esc(n.id)}">${esc(prompt)}</textarea></label>
     ${ch?`<button class="btn xs" type="button" data-orig="${esc(n.id)}">Back to the original</button>`:""}</details>`; }
+/* the placeholders in a prompt ({{input}}, {{question}}, ...) cannot be changed or removed: an edit that would do so is undone */
+function lockPlaceholders(ta,onOk,onBlocked){ let prev=ta.value;
+  const count=v=>{ const c={}; (v.match(/\{\{(input|question|subtask|feedback|debate)\}\}/g)||[]).forEach(t=>c[t]=(c[t]||0)+1); return c; };
+  ta.addEventListener("input",()=>{ const a=count(prev), b=count(ta.value);
+    if(Object.keys(a).some(t=>(b[t]||0)<a[t])){ const pos=Math.max(0,ta.selectionStart-(ta.value.length-prev.length)); ta.value=prev; ta.selectionStart=ta.selectionEnd=Math.min(pos,prev.length); if(onBlocked) onBlocked(); return; }
+    prev=ta.value; onOk(prev); }); }
 function bindEdit(){ const P=$("panel");
   P.querySelectorAll("[data-model]").forEach(s=>s.addEventListener("change",e=>{ const id=s.dataset.model; (ST.over[id] ||= {}).model=e.target.value; tidy(id); save(); renderFlow(); renderPanel(); }));
+  P.querySelectorAll("[data-prompt]").forEach(t=>lockPlaceholders(t,()=>{},()=>{ $("msg").textContent="The parts in {{ }} are fixed: they tell the engine where the input goes."; }));
   P.querySelectorAll("[data-prompt]").forEach(t=>t.addEventListener("change",e=>{ const id=t.dataset.prompt; (ST.over[id] ||= {}).prompt=e.target.value; tidy(id); save(); renderFlow(); renderPanel(); }));
   P.querySelectorAll("[data-orig]").forEach(b=>b.onclick=()=>{ delete ST.over[b.dataset.orig]; save(); renderFlow(); renderPanel(); });
   const it=$("inText"); if(it) it.addEventListener("change",e=>{ ST.inputOver=e.target.value.trim()===caseText().trim()?null:e.target.value; save(); renderFlow(); renderPanel(); });
@@ -415,8 +422,11 @@ $("stopBtn").addEventListener("click",()=>{ if(ctl) ctl.abort(); });
 /* ---- downloads in the log format (reference/log-format.md) ---- */
 const COLS=["run_id","date","time","title","source","strategy","strategy_version","run_version","changes_detected","repeat_no","input","models_asked","models_answered","prompts","settings_text","ai_output","ai_outcome","calls","tokens_est","seconds","trace","error","issues"];
 function csv(){ const q=v=>{ const s=String(v==null?"":v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }; return [COLS.join(",")].concat(ST.log.map(l=>COLS.map(c=>q(l[c])).join(","))).join("\n"); }
-/* the file name tells "sync" where the log belongs: runs-<strategy>.csv / .json, with every run and every test */
-const logName=()=>"runs-"+slug(STRATEGY.strategy);
+/* the file name tells "sync" where the log belongs: runs-<strategy>-<date>-<time>.csv / .json, with every run and every test */
+/* every download gets its own name (strategy + date and time), so nothing is overwritten; each file holds ALL runs so far,
+   so the newest file of a strategy is the complete log. */
+let logStamp="";
+const logName=()=>"runs-"+slug(STRATEGY.strategy)+"-"+logStamp;
 const slug=s=>String(s||"strategy").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 async function download(name,data){ try{ const dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null; if(dl){ await dl.save({filename:name,data}); $("msg").textContent="Saved "+name+"."; return; } }catch(e){ if(e&&e.code){ $("msg").textContent="Not saved."; return; } }
   try{ await navigator.clipboard.writeText(data); $("msg").textContent="Download is not available here, so the file was copied."; }catch(e){ $("msg").textContent="Download is not available in this view."; } }

@@ -14,14 +14,14 @@ Type **status** at any time to see where you are and what comes next.
 
 ## Downloads and sync
 
-The playground and your dashboards are web pages. They cannot save into this folder, so you download files from them, and they land in your Downloads folder. **sync** moves them from Downloads to the right place in this folder. The file names tell it where:
+The playground and your dashboards are web pages. They cannot save into this folder, so you download files from them, and they land in your Downloads folder. **sync** copies them from Downloads to the right place in this folder (the files stay in Downloads as a backup). The file names tell it where:
 
-| You download | From | sync moves it to |
+| You download | From | sync copies it to |
 |---|---|---|
 | `strategy-<name>.md` | Export in the sandbox | `3-strategies/<strategy>/export/strategy.md` |
-| `runs-<strategy>.csv` and `.json` | your strategy's dashboard, after every run (or **Download log**) | `3-strategies/<strategy>/dashboard/logs/` |
+| `runs-<strategy>-<date>-<time>.csv` and `.json` | **Download log** in your strategy's dashboard | `3-strategies/<strategy>/dashboard/logs/` (the newest as `runs.csv` / `runs.json`, every download in `logs/downloads/`) |
 
-A log download always holds every run so far, so download again after new runs, and sync again.
+A log download always holds every run so far, and every download gets its own name (date and time), so nothing is overwritten. Download when you are done running, then sync.
 
 ## Folders
 
