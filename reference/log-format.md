@@ -1,6 +1,6 @@
 # Run log format (the same in every dashboard)
 
-One row per run. Every dashboard writes it, so the CSV files of all strategies can be put together in one sheet. The student downloads them with **Download log** (not after every run). The two downloads are named `runs-<strategy>.csv` and `.json` and hold every run of that dashboard. "sync" moves them to `3-strategies/<strategy>/dashboard/logs/` as `runs.csv` and `runs.json`.
+One row per run. Every dashboard writes it, so the CSV files of all strategies can be put together in one sheet. The student downloads them with **Download log** (not after every run). The two downloads are named `runs-<strategy>-<date>-<time>.csv` and `.json` (a new name for every download, so nothing is overwritten) and hold every run of that dashboard so far. "sync" copies the newest to `3-strategies/<strategy>/dashboard/logs/` as `runs.csv` and `runs.json`, and keeps every download in `logs/downloads/`.
 
 The JSON download has every column below per run, plus `settings` (every box: type, model, effort, tools, prompt, rounds), `steps` (the full trace: every box, what went in, the full prompt, what came out, the model asked and the model that answered, the time) and `transcript` (the debate). At the top: `original_input` and `original_boxes` (the strategy as built, before any change).
 
