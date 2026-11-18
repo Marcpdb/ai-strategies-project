@@ -32,7 +32,7 @@ Never change or delete what the student made: `2-manual-dashboard/`, filled-in `
 
    Write the link to `1-playground/link.md`.
 2. **Check** as under "status", and say what is missing.
-3. Tell the student the next step in one or two lines: learn the strategies in the Playground tab (all on the same dinner workflow: Dishes, Guests, Budget & time, Choose; `reference/workflow.png` shows it); in the Sandbox load, change and run the ones they choose for the final decision of their workflow; export each one, fill in every _(fill in)_ in the file that opens, click Download, and type "sync".
+3. Tell the student the next step in one or two lines: look at the example dashboard in the Dinner planner tab (the workflow Dishes, Guests, Budget & time, Choose; `reference/workflow.png` shows it), then learn the strategies in the Playground tab, which all make the decision of that dashboard; in the Sandbox load, change and run the ones they choose for the final decision of their workflow; export each one, fill in every _(fill in)_ in the file that opens, click Download, and type "sync".
 
 ## The manual dashboard
 
