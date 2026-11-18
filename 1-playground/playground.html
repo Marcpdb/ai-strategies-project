@@ -344,7 +344,7 @@ const IN=(x,y)=>({id:"in",type:"in",x,y,w:90,h:50,label:"In",cfg:{input:CASE}});
 const OUT=(x,y,id,label)=>({id:id||"out",type:"out",x,y,w:label?100:90,h:50,label:label||"Out",cfg:{}});
 const AUX=(id,x,y,label,aux)=>({id,type:"aux",aux,x,y,w:150,h:56,label,cfg:{}});
 const E=(from,to,o)=>Object.assign({from,to},o||{});
-const ring=(cx,cy,r,n,i)=>{ const a=(-90+i*360/n)*Math.PI/180; return [Math.round(cx+r*Math.cos(a)),Math.round(cy+r*Math.sin(a))]; };
+const ring=(cx,cy,r,n,i,off)=>{ const a=(-90+(off||0)+i*360/n)*Math.PI/180; return [Math.round(cx+r*Math.cos(a)),Math.round(cy+r*Math.sin(a))]; };
 const guestPrompt=g=>`You are ${g.name}, a guest at dinner tonight. ${g.who}\nThis is step 2 of the workflow (Guests). Look at the dishes and say which ones you can eat, which you would rather not, and which one you prefer, in at most 60 words.\n\n{{input}}`;
 const STEP_DEB=[["diets","Diets","2","the diets and allergies of the guests (step 2, Guests)"],["prefs","Preferences","2","what every guest likes (step 2, Guests)"],["budget","Budget & time","3","the budget, the time and the kitchen (step 3, Budget & time)"]];
 const stepDebPrompt=focus=>`You speak for ${focus}. Together with the other debaters you choose what we cook tonight.\n\nCase:\n{{question}}\n\nThe discussion so far:\n{{debate}}\n\nSay which dish you want from your point of view and why, in at most 50 words. If others have spoken, answer them directly.`;
@@ -388,9 +388,9 @@ const PRESETS={
       L("host",770,220,"Judge",{step:"4",model:"claude-sonnet-5-5",prompt:"Step 4 of the workflow (Choose). You are the host and the judge. Read the discussion between the steps and choose one dish that is safe for everyone, with what to change in the recipe. Max 80 words. "+ADV+"\n\nCase:\n{{question}}\n\nDiscussion:\n{{debate}}"},120),OUT(930,220)],
     edges:[...STEP_DEB.map(([id])=>E("in",id,{hide:1})),...STEP_DEB.map(([id],i)=>E(id,STEP_DEB[(i+1)%3][0],{hide:1})),...STEP_DEB.map(([id])=>E(id,"host",{hide:1})),E("host","out")]},
   debate2:{name:"Debate (dishes)",steps:[2,3,4],desc:"Eight dishes compete to be cooked: each debater defends one dish against the guests (step 2) and the budget and time (step 3), and answers the others; a judge chooses (step 4).",
-    vbh:470, ring:{x:490,y:230,r:170,pad:76,label:"2 rounds: the dishes answer each other",from:"in",to:"host"},
-    nodes:[IN(80,230),...FINALISTS.map((d,i)=>{ const [x,y]=ring(490,230,170,8,i); return Object.assign(L("d"+(i+1),x,y,d.short,{rounds:2,prompt:dishDebPrompt(d)},130,"debater"),{h:46}); }),
-      L("host",830,230,"Judge",{step:"4",model:"claude-sonnet-5-5",prompt:"Step 4 of the workflow (Choose). You are the host and the judge. Eight dishes made their case. Choose one dish that is safe for everyone and fits the budget and time, with what to change in the recipe. Max 80 words. "+ADV+"\n\nCase:\n{{question}}\n\nDiscussion:\n{{debate}}"},110),OUT(950,230)],
+    vbh:490, ring:{x:490,y:240,r:200,pad:20,label:"2 rounds: the dishes answer each other",from:"in",to:"host"},
+    nodes:[IN(80,240),...FINALISTS.map((d,i)=>{ const [x,y]=ring(490,240,200,8,i,22.5); return Object.assign(L("d"+(i+1),x,y,d.short,{rounds:2,prompt:dishDebPrompt(d)},130,"debater"),{h:46}); }),
+      L("host",830,240,"Judge",{step:"4",model:"claude-sonnet-5-5",prompt:"Step 4 of the workflow (Choose). You are the host and the judge. Eight dishes made their case. Choose one dish that is safe for everyone and fits the budget and time, with what to change in the recipe. Max 80 words. "+ADV+"\n\nCase:\n{{question}}\n\nDiscussion:\n{{debate}}"},110),OUT(950,240)],
     edges:[...FINALISTS.map((d,i)=>E("in","d"+(i+1),{hide:1})),...FINALISTS.map((d,i)=>E("d"+(i+1),"d"+((i+1)%8+1),{hide:1})),...FINALISTS.map((d,i)=>E("d"+(i+1),"host",{hide:1})),E("host","out")]}
 };
 const ORDER=["augmented","chain","routing","parallel","orchestrator","evaluator","debate","debate2"];

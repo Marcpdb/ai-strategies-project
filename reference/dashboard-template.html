@@ -202,15 +202,15 @@ STRATEGY.version=STRATEGY.version||ENGINE.version(G);
   for(let k=0;k<G.nodes.length;k++) flow.forEach(e=>{ if(depth[e.from]!=null) depth[e.to]=Math.max(depth[e.to]??0,depth[e.from]+1); });
   const deb=G.nodes.filter(n=>n.type==="debater"), ring=deb.length>1;
   const cols=[]; G.nodes.forEach(n=>{ if(n.type!=="aux"&&!(ring&&n.type==="debater")) (cols[depth[n.id]??0] ||= []).push(n); });
-  const R=deb.length>4?170:110, dd=ring?(depth[deb[0].id]??1):-1; let x=70, cx=0;
+  const R=deb.length>4?200:110, dd=ring?(depth[deb[0].id]??1):-1; let x=70, cx=0;
   const nCol=Math.max(cols.length,dd+1);
   for(let d=0;d<nCol;d++){ const col=cols[d]||[];
     if(d===dd){ cx=x+R+70; x=cx+R+140; }
     const wmax=Math.max(0,...col.map(n=>n.w)); col.forEach((n,i)=>{ n.x=(d===dd?cx:x+wmax/2); n.y=220+(i-(col.length-1)/2)*Math.max(95,R*2/Math.max(1,col.length-1)); });
     if(d!==dd) x+=wmax+80; }
-  if(ring){ deb.forEach((n,i)=>{ const a=-Math.PI/2+i*2*Math.PI/deb.length; n.x=cx+R*Math.cos(a); n.y=220+R*Math.sin(a); });
+  if(ring){ deb.forEach((n,i)=>{ const a=-Math.PI/2+(i+(deb.length>4?0.5:0))*2*Math.PI/deb.length; n.x=cx+R*Math.cos(a); n.y=220+R*Math.sin(a); });
     const from=flow.find(e=>e.to===deb[0].id), to=flow.find(e=>e.from===deb[0].id);
-    G.ring={x:cx,y:220,r:R,pad:Math.max(62,Math.max(...deb.map(n=>n.w))/2+12),label:(deb[0].cfg.rounds||2)+" rounds: they answer each other",from:from&&from.from,to:to&&to.to};
+    G.ring={x:cx,y:220,r:R,pad:deb.length>4?20:Math.max(62,Math.max(...deb.map(n=>n.w))/2+12),label:(deb[0].cfg.rounds||2)+" rounds: they answer each other",from:from&&from.from,to:to&&to.to};
     G.edges.forEach(e=>{ if((by0[e.from]&&by0[e.from].type==="debater")||(by0[e.to]&&by0[e.to].type==="debater")) e.hide=1; }); }
   G.nodes.filter(n=>n.type==="aux").forEach((n,i,all)=>{ const e=G.edges.find(e=>e.from===n.id||e.to===n.id), host=e&&by0[e.from===n.id?e.to:e.from]||G.nodes[1]; n.w=110; n.h=46; n.x=host.x+(i-(all.length-1)/2)*170; n.y=host.y+170; });
 })();
