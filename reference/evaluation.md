@@ -1,56 +1,67 @@
 # How the evaluation works
 
-Used by the `SKILL.md` in every `3-strategies/<strategy>/evaluation/<test>/` folder. The evaluation is run from the strategy's own dashboard: next to **Run** (top right) there is a small dropdown with the tests and a **Run test** button. Each test makes **one** change automatically (with an extra prompt the student can read and edit before the first run), runs **3 times** on the same input, and logs everything. Nothing is set up by hand, and there are no separate test dashboards.
+Used when the student says "findings", or asks about the evaluation of a strategy. The student evaluates every AI dashboard **by hand**, with the evaluation methods from the theory class. The dashboard changes nothing by itself: it runs, documents and logs.
 
-| Folder | Button | Step | Question | What the button changes |
-|---|---|---|---|---|
-| 1-baseline-stability | Baseline | Document, Compare (TIA) | What exactly produced this result? Do repeated runs give the same outcome? | Nothing |
-| 2-vary-wording | Wording | Vary (systematic prompt variation) | Does changing the order or wording of the prompts change the outcome? | One extra call rewords every prompt, same meaning |
-| 3-vary-fact | Fact | Vary (counterfactual prompting) | Does changing one decisive fact change the outcome? | One extra call changes one decisive fact in the input |
-| 4-vary-boundary | Boundary | Vary (boundary testing) | With missing or conflicting information, does it flag uncertainty, or make things up? | One extra call removes one piece of information, or adds a contradiction |
-| 5-compare-models | Models | Compare (CSA, models) | How do models differ on the same case? | Every box one model up: Haiku → Sonnet, Sonnet → Opus, Opus → Sonnet |
-| 6-compare-agents | Agents | Compare (ISIA, multi-agent only) | Do the boxes influence each other, and do errors spread? | One extra call picks one box that passes its answer on, and gives it one wrong fact |
+## The methods (from the theory class)
 
-The input is fixed at the first test run: every test uses the same data of the dashboard (the fact and boundary tests change that same input). Single call has no Agents test.
+| Step | Method | Key question |
+|---|---|---|
+| 1 Document | date, time, run number, AI strategy, model(s), prompt(s), input dataset, settings, trace, final output and decision, tokens, time, issues | What exactly produced this result? |
+| 2 Vary input | prompt: wording, order, … · input: decisive fact, missing or conflicting information, … | How stable is the outcome of the followed AI strategy? How certain is the outcome from the input? |
+| 3 Vary system | repeated runs (TIA) · strategies and models (CSA) · agents (ISIA) | Does the outcome depend on what processes it? |
 
-Comparing the strategies with each other (CSA) and the conclusion are in `4-compare-and-conclude/`.
+Step 1 happens for every run, automatically: the dashboard logs all of it (`reference/log-format.md`).
 
 ## 1. Run (in the dashboard)
 
-The student picks each test in the dropdown, may open the line under it to read or change the extra prompt (before the first run of that test), and clicks **Run test**. Each test runs 3 times. The advice of the run shown is under the flow. When every test has 3 runs, the dashboard says so. After each test, the dashboard downloads the log by itself (CSV and JSON, every run so far; **Download log** does the same by hand). The student types "sync": the files go to `../../dashboard/logs/` as `runs.csv` and `runs.json`. Nothing is coded in the dashboard: the findings do that.
+- **Change** what the method needs, by hand: click a box in the flow to change its prompt or model; click **In** to change the input of the run (by default the data of the tabs). Changed boxes say "changed" in the flow; "Back to the original" undoes a change.
+- **Title** the run in the small box next to Run, for example "Baseline", "Vary input: budget €20", "Vary system: Opus for every box". Runs with the same title belong together: run each one about 3 times.
+- **Run.** The dashboard logs the run with its title and with what differs from the original (`changes_detected`). Under the advice, the student can write the issues they noticed; they go into the log too.
+
+After each run the log is downloaded (CSV and JSON, every run so far; **Download log** does the same by hand). The student types "sync": the files go to `3-strategies/<strategy>/dashboard/logs/` as `runs.csv` and `runs.json`.
+
+Advice for the student (say it when they ask what to run): first about 3 runs titled "Baseline" with nothing changed; then one change at a time, about 3 runs per title; the same input in every strategy dashboard when comparing strategies.
 
 ## 2. Findings (the student says "findings")
 
-**Only when every test is done.** Read `../../dashboard/logs/runs.json`. Its `tests` lists the tests of this dashboard. Every one of them needs at least 3 runs without an error. If not, say which tests still miss runs, and stop: no findings until all tests of this dashboard are done.
+Read `3-strategies/<strategy>/dashboard/logs/runs.json` and group the runs without an error by `title`.
 
-Then write `findings.md` in every test folder of this strategy, in plain English, short:
+1. **Name the method of every title.** From the title and `changes_detected`, say for each title which step and method of the table above it is (for example "Vary input: budget €20" → 2 Vary input, decisive fact). Show this short list and let the student correct it before you write. A title whose runs have different changes (different `changes_detected` or `input`) holds more than one test: say so, and ask whether to split it.
+2. **Find the baseline:** the title with nothing changed (`changes_detected` "none"). If there is none, say so and stop: every test is compared with the baseline.
+3. **Write one `findings.md` per title**, in `3-strategies/<strategy>/evaluation/<title in lower case, joined with ->/findings.md` (for example `evaluation/vary-input-budget-20/findings.md`), in plain English, short:
+   - **What was tested:** the title, the step and method (as confirmed), the key question of that step, what differed from the original (`changes_detected`), the dates, and the models that actually answered (`models_answered`).
+   - **Runs, coded:** a table: run, outcome (`ai_outcome`), the student's issues (`issues`), and your coding of each run from its `ai_output`, `input` and `steps`:
+     - **verdict:** correct, partly, wrong or unsure, judged against the input and the workflow in `3-strategies/<strategy>/export/strategy.md`, with one line why;
+     - **flags uncertainty:** yes or no, with the sentence that shows it, quoted word for word;
+     - **makes things up:** yes or no: a fact in the output that is not in the input, quoted word for word.
+     Mark the coding as Claude's, and invite the student to check it and change what they disagree with.
+   - **Compared with the baseline** (not in the baseline's own file): the baseline runs next to them. Say only what the log shows: how many runs gave the same outcome, where the outcome changed. With fewer than 3 runs, say that so few runs cannot show stability.
+   - **Open:** runs with an error, and runs you could not judge (say why).
+   - **The student's conclusion:** an empty section with the key question of the step. The student writes it; offer to help them phrase it, never write it for them.
 
-- **What was tested:** the question, the change as logged (`what_changed`, and for an extra call `extra_prompt` and `extra_output`), the dates, the input, and the models that actually answered (`models_answered`).
-- **Runs, coded:** a table: run, outcome (`ai_outcome`), and your coding of each run from its `ai_output`, `input` and `steps`:
-  - **verdict:** correct, partly, wrong or unsure, judged against the input and the workflow in `../../export/strategy.md`, with one line why;
-  - **flags uncertainty:** yes or no, with the sentence that shows it, quoted word for word;
-  - **makes things up:** yes or no: a fact in the output that is not in the input, quoted word for word.
-  Mark the coding as Claude's, and invite the student to check it and change what they disagree with.
-- **Compared with the baseline:** the baseline runs next to them (not in folder 1). Say only what the log shows: how many runs gave the same outcome, where the outcome changed.
-- **Open:** runs with an error, and runs you could not judge (say why).
-- **The student's conclusion:** an empty section with the folder's question. The student writes it; offer to help them phrase it, never write it for them.
+What to look at per method:
 
-Each test folder's `SKILL.md` says what its findings look at in particular.
+- **Baseline, repeated runs (TIA):** how many runs gave the same outcome, and where the outputs differ.
+- **Prompt and input changes:** did the outcome follow the change? With missing or conflicting information: did it flag uncertainty, or make something up?
+- **Models (CSA):** which models were asked and which answered; how the outcomes differ.
+- **Strategies (CSA):** compared across dashboards in "compare".
+- **Agents (ISIA):** read the `steps`: what the changed box produced, what the boxes after it received, and whether its error reached the final output.
+
+Existing `findings.md` files hold the student's checks and conclusions: never overwrite them. When new runs came in for a title that already has findings, add a section "New runs" under the existing text.
 
 ## 3. What comes next (always say this after findings)
 
-The student evaluates every strategy they chose: every strategy with an `export/strategy.md`. After writing the findings of one strategy, look at the others and tell the student the next step in one or two lines:
+The student chooses 5 strategies and evaluates each: the strategies with an `export/strategy.md`. After writing findings, look at the others and tell the student the next step in one or two lines:
 
 - a strategy with an export but no dashboard yet: "build the <strategy> dashboard";
-- a strategy with a dashboard whose tests are not all done: which tests still need runs, in that dashboard;
-- a strategy whose tests are done but without findings: "findings for <strategy>";
-- every strategy done, with findings: "compare" (`4-compare-and-conclude/`).
-
-Never suggest comparing or concluding while a chosen strategy is not done.
+- a strategy with a dashboard but no baseline runs in its log: run the baseline there first;
+- a strategy with runs but without findings: "findings for <strategy>";
+- fewer than 5 strategies with an export: the student still has to choose and export the others in the playground's Sandbox;
+- all 5 strategies with findings: "compare" (`4-compare-and-conclude/`).
 
 ## Rules
 
-- One change per test; everything else stays the same as the baseline. The dashboard does this: do not change prompts or models by hand during the evaluation.
+- One change at a time; the student makes it, not Claude. Never change a student's dashboard to run an evaluation for them.
 - Report every run, also the failed ones.
 - No anthropomorphism: write "the debater boxes produced", not "the agents argued" or "the agent thought".
 - Invented data only, no real personal data.

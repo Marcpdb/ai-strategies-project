@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 210" width="1200" height="210" font-family="Inter, system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <title>The workflow: what do we cook tonight?</title>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1,1 L8,5 L1,9" fill="none" stroke="#a7a49c" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <g fill="none" stroke="#a7a49c" stroke-width="1.8" marker-end="url(#ah)">
+    <path d="M276,60 L316,60"/>
+    <path d="M576,60 L616,60"/>
+    <path d="M876,60 L916,60"/>
+  </g>
+  <g text-anchor="middle" dominant-baseline="central">
+    <rect x="20" y="20" width="250" height="80" rx="4" fill="#eef4e7" stroke="#b7d29c" stroke-width="1.5"/>
+    <text x="145" y="50" font-size="24" font-weight="600" fill="#5b8a30">1 Dishes</text>
+    <text x="145" y="78" font-size="14" font-weight="500" fill="#6f6c64">what we can cook</text>
+
+    <rect x="320" y="20" width="250" height="80" rx="4" fill="#eef4e7" stroke="#b7d29c" stroke-width="1.5"/>
+    <text x="445" y="50" font-size="24" font-weight="600" fill="#5b8a30">2 Guests</text>
+    <text x="445" y="78" font-size="14" font-weight="500" fill="#6f6c64">diets and preferences</text>
+
+    <rect x="620" y="20" width="250" height="80" rx="4" fill="#eef4e7" stroke="#b7d29c" stroke-width="1.5"/>
+    <text x="745" y="50" font-size="24" font-weight="600" fill="#5b8a30">3 Budget &amp; time</text>
+    <text x="745" y="78" font-size="14" font-weight="500" fill="#6f6c64">what fits tonight</text>
+
+    <rect x="920" y="20" width="250" height="80" rx="4" fill="#eef4e7" stroke="#b7d29c" stroke-width="1.5"/>
+    <text x="1045" y="50" font-size="24" font-weight="600" fill="#5b8a30">4 Choose</text>
+    <text x="1045" y="78" font-size="14" font-weight="500" fill="#6f6c64">the decision</text>
+  </g>
+  <g font-size="16" fill="#1f1e1b" text-anchor="middle">
+    <text x="145" y="136">18 dishes: ingredients,</text>
+    <text x="145" y="158">€ for four, minutes, oven/hobs</text>
+    <text x="445" y="136">Anna, Ben, Chloé, David:</text>
+    <text x="445" y="158">vegetarian, nuts, mushrooms, lactose</text>
+    <text x="745" y="136">€30 in total, 45 minutes,</text>
+    <text x="745" y="158">one oven, two hobs</text>
+    <text x="1045" y="136">one dish for everyone,</text>
+    <text x="1045" y="158">with any change to the recipe</text>
+  </g>
+</svg>
