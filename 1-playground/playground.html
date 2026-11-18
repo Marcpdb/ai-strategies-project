@@ -623,7 +623,7 @@ function strategyMarkdown(){
   const flow=g.edges.filter(e=>by[e.from]&&by[e.to]&&by[e.from].type!=="aux"&&by[e.to].type!=="aux"&&!(by[e.from].type==="debater"&&by[e.to].type==="debater"));
   const sends=id=>flow.filter(e=>e.from===id).map(e=>by[e.to].label+(e.loop?" (line: "+(e.label||"Rejected")+", goes back)":(e.label?" (line: "+e.label+")":""))).join(", ")||"nothing";
   const deb=g.nodes.filter(n=>n.type==="debater");
-  const box=n=>{ const c=n.cfg; if(n.type==="gate") return "### "+n.label+"\n- Type: gate (a check in code, no LLM): passes when the text has at most "+(c.maxWords||60)+" words; when it fails, the flow follows the line Fail\n- Tab of my dashboard: "+FILL+"\n- Sends to: "+sends(n.id)+"\n";
+  const box=n=>{ const c=n.cfg; if(n.type==="gate") return "### "+n.label+"\n- Type: gate (a check in code, not an agent): passes when the text has at most "+(c.maxWords||60)+" words; when it fails, the flow follows the line Fail\n- Tab of my dashboard: "+FILL+"\n- Sends to: "+sends(n.id)+"\n";
     return "### "+n.label+"\n- Type: "+n.type+"\n- Tab of my dashboard: "+FILL+"\n- Model: `"+(c.model==="custom"?c.customId:c.model)+"`, effort: "+(c.effort||"default")+((c.tools||[]).length?", tools: "+c.tools.join(", "):"")
       +(n.type==="evaluator"?", maximum rounds: "+(c.maxRounds||3):"")+(n.type==="debater"?", rounds: "+(c.rounds||2):"")+"\n- Sends to: "+sends(n.id)+"\n- Prompt:\n\n```text\n"+c.prompt+"\n```\n"; };
   const ins=g.nodes.filter(n=>n.type==="in");
