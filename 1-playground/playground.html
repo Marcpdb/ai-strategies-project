@@ -73,7 +73,7 @@ button,select,input,textarea{font:inherit;color:inherit} :focus-visible{outline:
 @media (prefers-reduced-motion:no-preference){.bub .dot{animation:blink 1.1s infinite}.bub .dot:nth-child(2){animation-delay:.18s}.bub .dot:nth-child(3){animation-delay:.36s}}
 @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
 .handle{fill:var(--card);stroke:var(--arrow);stroke-width:1.5;cursor:crosshair} .handle:hover{stroke:var(--ink)}
-.tmp{stroke:var(--ink);stroke-width:1.5;stroke-dasharray:4 4;fill:none}
+.tmp{stroke:var(--ink);stroke-width:1.5;stroke-dasharray:4 4;fill:none;pointer-events:none}
 /* panel */
 .panel{padding:14px;display:flex;flex-direction:column;gap:12px;position:sticky;top:max(12px,env(safe-area-inset-top,0px));max-height:calc(100vh - 24px);overflow:auto}
 .panel h2{font-size:16px;margin:0} .panel .kind{font-size:12px;color:var(--muted);margin-top:2px}
@@ -97,10 +97,10 @@ button,select,input,textarea{font:inherit;color:inherit} :focus-visible{outline:
   <nav class="tabs" id="tabs" role="tablist" aria-label="Strategies"></nav>
   <div class="palette" id="palette" hidden>
     <span>Start from</span><select id="startFrom"></select><button class="btn sm" type="button" id="loadBtn">Load</button>
-    <span id="loadConfirm" class="confirm" hidden>Replace your sandbox? <button class="btn sm" type="button" id="loadYes">Replace</button><button class="btn sm" type="button" id="loadNo">Cancel</button></span>
+    
     <span style="margin-left:10px">Add</span>
-    <button class="btn sm" type="button" data-add="in">In</button><button class="btn sm" type="button" data-add="llm">LLM call</button>
-    <button class="btn sm" type="button" data-add="router">Router</button><button class="btn sm" type="button" data-add="gate">Gate</button><button class="btn sm" type="button" data-add="out">Out</button>
+    <button class="btn sm" type="button" data-add="in">In</button><button class="btn sm" type="button" data-add="llm">Agent</button>
+    <button class="btn sm" type="button" data-add="gate">Gate</button><button class="btn sm" type="button" data-add="out">Out</button>
   </div>
   <div class="stage">
     <section class="card diagram">
@@ -351,55 +351,55 @@ const stepDebPrompt=focus=>`You speak for ${focus}. Together with the other deba
 const FINALISTS=["Chickpea and tomato stew with bread","Black bean chilli with rice","Shakshuka with bread","Lentil bolognese with spaghetti","Vegetable curry with rice","Thai green curry with tofu","Lentil dahl with naan","Pasta pesto"].map(n=>DISHES.find(d=>d.name===n));
 const dishDebPrompt=d=>`You speak for one dish: ${d.name} (€${d.cost}, ${d.min} min, ${d.kitchen}, ${d.taste}; ${d.ingredients}). Eight dishes compete to be cooked tonight; a judge chooses one.\n\nCase:\n{{question}}\n\nThe discussion so far:\n{{debate}}\n\nIn at most 50 words, argue why your dish fits the guests (step 2) and the budget and time (step 3) best, with any change to the recipe it needs. Answer the other dishes directly. Be honest: if your dish cannot be made safe for everyone, say so.`;
 const PRESETS={
-  augmented:{name:"Single call",steps:[1,2,3,4],desc:"One LLM call does all four steps of the workflow at once, with retrieval, tools and memory.",
-    nodes:[IN(80,120),L("llm",500,120,"Assistant",{step:"1–4",model:"claude-sonnet-5-5",tools:["retrieval","calculator","memory"],prompt:"Four friends come for dinner tonight and we cook one dish for everyone. Choose the dish. Follow the four steps of the workflow: 1 Dishes, 2 Guests (diets and preferences), 3 Budget & time, 4 Choose. Search the notes for ways to adapt a recipe, use the calculator for the cost per person, and save the choice in memory. Max 120 words. "+ADV+"\n\n{{input}}"},170),OUT(910,120),
+  augmented:{name:"Single call",steps:[1,2,3,4],desc:"One agent does all four steps of the workflow at once, with retrieval, tools and memory.",
+    nodes:[IN(80,120),L("llm",500,120,"Agent",{step:"1–4",model:"claude-sonnet-5-5",tools:["retrieval","calculator","memory"],prompt:"Four friends come for dinner tonight and we cook one dish for everyone. Choose the dish. Follow the four steps of the workflow: 1 Dishes, 2 Guests (diets and preferences), 3 Budget & time, 4 Choose. Search the notes for ways to adapt a recipe, use the calculator for the cost per person, and save the choice in memory. Max 120 words. "+ADV+"\n\n{{input}}"},170),OUT(910,120),
       AUX("retrieval",250,290,"Retrieval","retrieval"),AUX("tools",500,290,"Tools","tools"),AUX("memory",750,290,"Memory","memory")],
     edges:[E("in","llm"),E("llm","out"),E("llm","retrieval",{label:"Query",bend:-28,dash:1}),E("retrieval","llm",{label:"Results",bend:-28,dash:1}),E("llm","tools",{label:"Call",bend:-28,dash:1}),E("tools","llm",{label:"Response",bend:-28,dash:1}),E("llm","memory",{label:"Read",bend:-28,dash:1}),E("memory","llm",{label:"Write",bend:-28,dash:1})]},
   chain:{name:"Chain",steps:[2,3,4],desc:"The steps of the workflow in a row: Guests, then Budget & time, then Choose. Each call works on the output of the one before; the gate is a check in code.",
     nodes:[IN(60,150),L("c1",215,150,"Guests",{step:"2",prompt:"Step 2 of the workflow (Guests). Which dishes can every guest eat (diets and allergies), possibly with a small change to the recipe, and which fit their preferences? Name at most 3, with the change. Max 60 words.\n\n{{input}}"},140),
       {id:"gate",type:"gate",x:375,y:150,w:100,h:56,label:"Gate",cfg:{maxWords:60}},
       L("c2",540,150,"Budget & time",{step:"3",prompt:"Step 3 of the workflow (Budget & time). Check these dishes against the budget, the time and the kitchen. Max 60 words.\n\nDishes from step 2:\n{{input}}\n\nCase:\n{{question}}"},150),
-      L("c3",715,150,"Choose",{step:"4",prompt:"Step 4 of the workflow (Choose). Four friends come for dinner tonight. Choose one dish for everyone and say what to change in the recipe. Max 70 words. "+ADV+"\n\n{{input}}"},130),OUT(905,150),OUT(375,290,"exit","Exit")],
+      L("c3",720,150,"Judge (choose)",{step:"4",prompt:"Step 4 of the workflow (Choose). Four friends come for dinner tonight. Choose one dish for everyone and say what to change in the recipe. Max 70 words. "+ADV+"\n\n{{input}}"},145),OUT(905,150),OUT(375,290,"exit","Exit")],
     edges:[E("in","c1"),E("c1","gate"),E("gate","c2",{label:"Pass"}),E("c2","c3"),E("c3","out"),E("gate","exit",{label:"Fail",dash:1})]},
   routing:{name:"Routing",steps:[2,3,4],desc:"A router decides which step of the workflow matters most tonight and sends the case to that one specialist; then the dish is chosen (step 4).",
     nodes:[IN(70,180),L("router",250,180,"Router",{step:"2–3",prompt:"Which step of the workflow decides tonight's dinner: the diets of the guests, their preferences, or the budget and time? Pick the specialist who should look at it.\n\n{{input}}"},120,"router"),
       L("r1",495,70,"Diets",{step:"2",prompt:"Step 2 of the workflow, only diets and allergies. Which dishes are safe for every guest, with any change to the recipe? Name at most 3. Max 60 words.\n\n{{input}}"},150),
       L("r2",495,180,"Preferences",{step:"2",prompt:"Step 2 of the workflow, only preferences. Which dishes will every guest enjoy? Name at most 3. Max 60 words.\n\n{{input}}"},150),
       L("r3",495,290,"Budget & time",{step:"3",prompt:"Step 3 of the workflow (Budget & time). Which dishes fit the budget, the time and the kitchen? Name at most 3. Max 60 words.\n\n{{input}}"},150),
-      L("choose",745,180,"Choose",{step:"4",prompt:"Step 4 of the workflow (Choose). One specialist looked at the case. Choose one dish that also works for the other steps, with what to change in the recipe. Max 70 words. "+ADV+"\n\nSpecialist:\n{{input}}\n\nCase:\n{{question}}"},120),OUT(920,180)],
+      L("choose",750,180,"Judge (choose)",{step:"4",prompt:"Step 4 of the workflow (Choose). One specialist looked at the case. Choose one dish that also works for the other steps, with what to change in the recipe. Max 70 words. "+ADV+"\n\nSpecialist:\n{{input}}\n\nCase:\n{{question}}"},145),OUT(920,180)],
     edges:[E("in","router"),E("router","r1",{dash:1,bend:-20}),E("router","r2",{dash:1}),E("router","r3",{dash:1,bend:20}),E("r1","choose",{dash:1,bend:-20}),E("r2","choose",{dash:1}),E("r3","choose",{dash:1,bend:20}),E("choose","out")]},
   parallel:{name:"Parallel",steps:[2,3,4],vbh:380,desc:"Step 2 runs once per guest and step 3 once, all at the same time; an aggregator combines their answers and chooses (step 4).",
     nodes:[IN(70,190),...GUESTS.map((g,i)=>L(g.id,380,50+i*70,g.name,{step:"2",prompt:guestPrompt(g)},140)),
       L("budget",380,330,"Budget & time",{step:"3",prompt:"Step 3 of the workflow (Budget & time). Which dishes fit the budget, the time and the kitchen? List them with cost and minutes, in at most 60 words.\n\n{{input}}"},150),
-      L("host",670,190,"Aggregator",{step:"4",model:"claude-sonnet-5-5",prompt:"Step 4 of the workflow (Choose). You are the host. The four guests gave their views (step 2) and one box checked the budget and time (step 3). Choose one dish that is safe for everyone and fits the budget and time; say what to change in the recipe. Max 90 words. "+ADV+"\n\nCase:\n{{question}}\n\nViews:\n{{input}}"},130),OUT(900,190)],
+      L("host",670,190,"Judge (aggregator)",{step:"4",model:"claude-sonnet-5-5",prompt:"Step 4 of the workflow (Choose). You are the host. The four guests gave their views (step 2) and one box checked the budget and time (step 3). Choose one dish that is safe for everyone and fits the budget and time; say what to change in the recipe. Max 90 words. "+ADV+"\n\nCase:\n{{question}}\n\nViews:\n{{input}}"},180),OUT(900,190)],
     edges:[...[...GUESTS.map(g=>g.id),"budget"].map((id,i)=>E("in",id,{dash:1,bend:[-14,-7,0,7,14][i]})),...[...GUESTS.map(g=>g.id),"budget"].map((id,i)=>E(id,"host",{dash:1,bend:[-14,-7,0,7,14][i]})),E("host","out")]},
   orchestrator:{name:"Orchestrator",steps:[2,3,4],desc:"An orchestrator decides during the run which sub-tasks steps 2 and 3 need, and hands them to workers; a synthesizer combines the results and chooses (step 4).",
     nodes:[IN(60,180),L("orch",255,180,"Orchestrator",{step:"2–3",model:"claude-sonnet-5-5",prompt:"Our workflow has four steps: 1 Dishes, 2 Guests (diets and preferences), 3 Budget & time, 4 Choose. Plan the sub-tasks that steps 2 and 3 need tonight (at most 3), one per worker. The synthesizer does step 4.\n\n{{input}}"},130,"orchestrator"),
       ...[1,2,3].map(i=>L("w"+i,500,75+(i-1)*105,"Worker "+i,{step:"2–3",prompt:"Do only this sub-task, max 60 words.\nSub-task: {{subtask}}\n\nCase:\n{{question}}"},150,"worker")),
-      L("synth",745,180,"Synthesizer",{step:"4",model:"claude-sonnet-5-5",prompt:"Step 4 of the workflow (Choose). Combine the workers' results and choose one dish, with what to change in the recipe. Max 90 words. "+ADV+"\n\nCase:\n{{question}}\n\nResults:\n{{input}}"},130),OUT(925,180)],
+      L("synth",735,180,"Judge (synthesizer)",{step:"4",model:"claude-sonnet-5-5",prompt:"Step 4 of the workflow (Choose). Combine the workers' results and choose one dish, with what to change in the recipe. Max 90 words. "+ADV+"\n\nCase:\n{{question}}\n\nResults:\n{{input}}"},190),OUT(925,180)],
     edges:[E("in","orch"),E("orch","w1",{dash:1,bend:-22}),E("orch","w2",{dash:1}),E("orch","w3",{dash:1,bend:22}),E("w1","synth",{dash:1,bend:-22}),E("w2","synth",{dash:1}),E("w3","synth",{dash:1,bend:22}),E("synth","out")]},
   evaluator:{name:"Critic",steps:[2,3,4],desc:"A generator proposes a dish (step 4); an evaluator checks it against steps 2 and 3 of the workflow and sends feedback, until it is accepted.",
     nodes:[IN(70,180),L("gen",290,180,"Generator",{step:"4",prompt:"Step 4 of the workflow (Choose). Propose the dinner: one dish, what to change in the recipe, and why it works for every guest (step 2) and for the budget and time (step 3). "+ADV+"\n\n{{input}}\n\nFeedback on your previous proposal: {{feedback}}"},150),
-      L("eval",660,180,"Evaluator",{step:"2–3",model:"claude-sonnet-5-5",maxRounds:3,prompt:"Check the proposal against steps 2 and 3 of the workflow. Step 2: no nuts or peanuts at all (Ben); vegetarian (Anna); no lactose (David); no mushrooms (Chloé). Step 3: within the budget, the time and the kitchen of the case.\n\nCase:\n{{question}}\n\nProposal:\n{{input}}"},170,"evaluator"),OUT(905,180)],
+      L("eval",660,180,"Judge (evaluator)",{step:"2–3",model:"claude-sonnet-5-5",maxRounds:3,prompt:"Check the proposal against steps 2 and 3 of the workflow. Step 2: no nuts or peanuts at all (Ben); vegetarian (Anna); no lactose (David); no mushrooms (Chloé). Step 3: within the budget, the time and the kitchen of the case.\n\nCase:\n{{question}}\n\nProposal:\n{{input}}"},170,"evaluator"),OUT(905,180)],
     edges:[E("in","gen"),E("gen","eval",{label:"Proposal",bend:-35}),E("eval","gen",{label:"Rejected + feedback",bend:-35,dash:1,loop:1}),E("eval","out",{label:"Accepted"})]},
   debate:{name:"Debate (steps)",steps:[2,3,4],desc:"Each debater speaks for one step of the workflow: diets, preferences, budget and time. They answer each other in rounds; a judge reads the whole debate and chooses (step 4).",
     vbh:440, ring:{x:470,y:220,r:110,label:"2 rounds: the steps answer each other",from:"in",to:"host"},
     nodes:[IN(90,220),...STEP_DEB.map(([id,n,st,focus],i)=>{ const [x,y]=ring(470,220,110,3,i); return L(id,x,y,n,{step:st,rounds:2,prompt:stepDebPrompt(focus)},130,"debater"); }),
-      L("host",770,220,"Judge",{step:"4",model:"claude-sonnet-5-5",prompt:"Step 4 of the workflow (Choose). You are the host and the judge. Read the discussion between the steps and choose one dish that is safe for everyone, with what to change in the recipe. Max 80 words. "+ADV+"\n\nCase:\n{{question}}\n\nDiscussion:\n{{debate}}"},120),OUT(930,220)],
+      L("host",775,220,"Judge (jury)",{step:"4",model:"claude-sonnet-5-5",prompt:"Step 4 of the workflow (Choose). You are the host and the judge. Read the discussion between the steps and choose one dish that is safe for everyone, with what to change in the recipe. Max 80 words. "+ADV+"\n\nCase:\n{{question}}\n\nDiscussion:\n{{debate}}"},130),OUT(930,220)],
     edges:[...STEP_DEB.map(([id])=>E("in",id,{hide:1})),...STEP_DEB.map(([id],i)=>E(id,STEP_DEB[(i+1)%3][0],{hide:1})),...STEP_DEB.map(([id])=>E(id,"host",{hide:1})),E("host","out")]},
   debate2:{name:"Debate (dishes)",steps:[2,3,4],desc:"Eight dishes compete to be cooked: each debater defends one dish against the guests (step 2) and the budget and time (step 3), and answers the others; a judge chooses (step 4).",
     vbh:470, ring:{x:490,y:230,r:170,pad:76,label:"2 rounds: the dishes answer each other",from:"in",to:"host"},
     nodes:[IN(80,230),...FINALISTS.map((d,i)=>{ const [x,y]=ring(490,230,170,8,i); return Object.assign(L("d"+(i+1),x,y,d.short,{rounds:2,prompt:dishDebPrompt(d)},130,"debater"),{h:46}); }),
-      L("host",830,230,"Judge",{step:"4",model:"claude-sonnet-5-5",prompt:"Step 4 of the workflow (Choose). You are the host and the judge. Eight dishes made their case. Choose one dish that is safe for everyone and fits the budget and time, with what to change in the recipe. Max 80 words. "+ADV+"\n\nCase:\n{{question}}\n\nDiscussion:\n{{debate}}"},110),OUT(950,230)],
+      L("host",815,230,"Judge (jury)",{step:"4",model:"claude-sonnet-5-5",prompt:"Step 4 of the workflow (Choose). You are the host and the judge. Eight dishes made their case. Choose one dish that is safe for everyone and fits the budget and time, with what to change in the recipe. Max 80 words. "+ADV+"\n\nCase:\n{{question}}\n\nDiscussion:\n{{debate}}"},130),OUT(935,230)],
     edges:[...FINALISTS.map((d,i)=>E("in","d"+(i+1),{hide:1})),...FINALISTS.map((d,i)=>E("d"+(i+1),"d"+((i+1)%8+1),{hide:1})),...FINALISTS.map((d,i)=>E("d"+(i+1),"host",{hide:1})),E("host","out")]}
 };
 const ORDER=["augmented","chain","routing","parallel","orchestrator","evaluator","debate","debate2"];
-const TYPE_INFO={in:"What goes into the strategy",out:"The result",llm:"LLM call",worker:"Worker: does one sub-task of the orchestrator",router:"Router: sends the case to one specialist",gate:"Gate: a simple check in code, not an LLM",orchestrator:"Orchestrator: plans sub-tasks for the workers it connects to",evaluator:"Evaluator: checks against criteria, accepts or sends feedback",debater:"Debater: argues every round and answers the others"};
-const AUX_INFO={retrieval:"Searches the notes when the LLM asks.",tools:"A calculator the LLM can call.",memory:"Notes that stay between runs, in this browser."};
+const TYPE_INFO={in:"What goes into the strategy",out:"The result",llm:"Agent",worker:"Worker: does one sub-task of the orchestrator",router:"Router: sends the case to one specialist",gate:"Gate: a simple check in code, not an agent",orchestrator:"Orchestrator: plans sub-tasks for the workers it connects to",evaluator:"Evaluator: checks against criteria, accepts or sends feedback",debater:"Debater: argues every round and answers the others"};
+const AUX_INFO={retrieval:"Searches the notes when the agent asks.",tools:"A calculator the agent can call.",memory:"Notes that stay between runs, in this browser."};
 
 /* ---------- saved state ---------- */
 const STORE="ai-playground-v5", MAXRUNS=30;
-const SAND_EMPTY=()=>({name:"My strategy",base:"",nodes:[IN(110,200),L("n2",470,200,"LLM call",{prompt:"{{input}}"}),OUT(830,200)],edges:[E("in","n2"),E("n2","out")],seq:3});
+const SAND_EMPTY=()=>({name:"My strategy",base:"",nodes:[IN(110,200),L("n2",470,200,"Agent",{prompt:"{{input}}"}),OUT(830,200)],edges:[E("in","n2"),E("n2","out")],seq:3});
 let S={mode:"play",tab:"parallel",over:{},sandbox:null,runs:{},view:{},seq:0,knowledge:KNOWLEDGE,memory:[]};
 try{ const s=JSON.parse(localStorage.getItem(STORE)||"null"); if(s) S=Object.assign(S,s); }catch(e){}
 if(!S.sandbox) S.sandbox=SAND_EMPTY(); if(!ORDER.includes(S.tab)) S.tab="parallel";
@@ -423,7 +423,7 @@ function epath(a,b,bend){ const p1=anchor(a,b,6),p2=anchor(b,a,8),mx=(p1.x+p2.x)
 const VBH=()=>sand()?Math.max(440,S.sandbox.vbh||0):(graph().vbh||360);
 const kind=n=>n.type==="in"||n.type==="out"?"io":(n.type==="gate"?"code":"llm");
 function fit(s,w){ const m=Math.floor(w/9.6); return s.length>m?s.slice(0,m-1)+"…":s; }
-function sub(n){ if(["aux","in","out"].includes(n.type)) return ""; if(n.type==="gate") return "max "+(n.cfg.maxWords||60)+" words"; const st=sand()?"":String(n.cfg.step||"").trim(); if(!st) return ""; const w=WORKFLOW.find(x=>String(x.n)===st); return "step "+st+(w&&w.label!==n.label?" · "+w.label:""); }
+function sub(n){ if(["aux","in","out"].includes(n.type)) return ""; if(n.type==="gate") return "max "+(n.cfg.maxWords||60)+" words"; return mname(n.cfg); }
 const ARROW=c=>`<marker id="${c}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--${c==="ah"?"arrow":"live"})" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>`;
 function render(){
   const g=graph(), sb=sand(); svg.setAttribute("viewBox","0 0 1000 "+VBH());
@@ -476,9 +476,15 @@ document.querySelector(".modes").addEventListener("click",e=>{ const b=e.target.
 $("tabs").addEventListener("click",e=>{ const b=e.target.closest("[data-tab]"); if(!b||running) return; S.tab=b.dataset.tab; selected=null; $("msg").textContent=""; save(); refresh(); });
 $("runs").addEventListener("change",e=>{ S.view[key()]=e.target.value; save(); refresh(); });
 $("resetBtn").addEventListener("click",()=>{ if(running) return; if(sand()){ S.sandbox=SAND_EMPTY(); } else delete S.over[S.tab]; selected=null; save(); refresh(); $("msg").textContent=sand()?"Sandbox emptied.":"Back to the original settings."; });
-$("loadBtn").addEventListener("click",()=>{ $("loadConfirm").hidden=false; });
-$("loadNo").addEventListener("click",()=>{ $("loadConfirm").hidden=true; });
-$("loadYes").addEventListener("click",()=>{ if(running) return; editing=null; const k=$("startFrom").value; S.sandbox = k ? Object.assign({name:PRESETS[k].name+" (my version)",base:k,seq:1},clone({nodes:PRESETS[k].nodes,edges:PRESETS[k].edges,ring:PRESETS[k].ring||undefined,vbh:PRESETS[k].vbh||undefined})) : SAND_EMPTY(); $("loadConfirm").hidden=true; selected=null; save(); refresh(); });
+/* a template: the boxes and arrows of an example, without its input and prompts (students write their own) */
+const PH=["{{input}}","{{question}}","{{subtask}}","{{feedback}}","{{debate}}"];
+function template(k){ const P=PRESETS[k], g=clone({nodes:P.nodes,edges:P.edges,ring:P.ring||undefined,vbh:P.vbh||undefined}); let a=0;
+  g.nodes.forEach(n=>{ if(n.type==="in") n.cfg.input="";
+    if(n.cfg&&typeof n.cfg.prompt==="string"){ const ph=PH.filter(x=>n.cfg.prompt.includes(x)).sort((x,y)=>n.cfg.prompt.indexOf(x)-n.cfg.prompt.indexOf(y)); n.cfg.prompt=(ph.length?ph:["{{input}}"]).join("\n\n"); }
+    if(n.type==="debater") n.label="Actor "+(++a);
+    if(n.cfg) delete n.cfg.step; });
+  return Object.assign({name:P.name+" (my version)",base:k,seq:1},g); }
+$("loadBtn").addEventListener("click",()=>{ if(running) return; editing=null; const k=$("startFrom").value; S.sandbox = k ? template(k) : SAND_EMPTY(); selected=null; selEdge=null; save(); refresh(); $("msg").textContent=k?"Template loaded: write your own input and prompts.":"Sandbox emptied."; });
 
 /* ---------- side panel: settings of the clicked box, and what went in and out ---------- */
 function stepsOf(id){ const r=shown(); return r&&r.steps?r.steps.filter(s=>s.id===id):[]; }
@@ -552,15 +558,17 @@ svg.addEventListener("pointermove",e=>{
 });
 svg.addEventListener("pointerup",e=>{
   if(drag){ if(drag.moved) save(); drag=null; }
-  if(link){ const el=document.elementFromPoint(e.clientX,e.clientY), g=el&&el.closest&&el.closest("[data-node]");
-    if(g&&g.dataset.node!==link.from&&!S.sandbox.edges.some(x=>x.from===link.from&&x.to===g.dataset.node)){ S.sandbox.edges.push({from:link.from,to:g.dataset.node}); save(); }
+  if(link){ const p=svgPoint(e), to=S.sandbox.nodes.filter(n=>n.type!=="aux"&&Math.abs(p.x-n.x)<=n.w/2+10&&Math.abs(p.y-n.y)<=n.h/2+10).sort((a,b)=>Math.hypot(p.x-a.x,p.y-a.y)-Math.hypot(p.x-b.x,p.y-b.y))[0];
+    if(to&&to.id!==link.from&&to.type!=="in"&&!S.sandbox.edges.some(x=>x.from===link.from&&x.to===to.id)){ S.sandbox.edges.push({from:link.from,to:to.id}); save(); }
     link=null; render(); }
 });
 svg.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ const g=e.target.closest("[data-node]"); if(g){ selected=g.dataset.node; render(); renderPanel(); e.preventDefault(); } } });
 $("palette").addEventListener("click",e=>{
   const b=e.target.closest("[data-add]"); if(!b||running) return; const t=b.dataset.add, sb=S.sandbox; let id; do{ id="n"+(++sb.seq); }while(sb.nodes.some(n=>n.id===id));
-  const x=690+((sb.nodes.length*150)%200), y=400;
-  sb.nodes.push(t==="in"?{id,type:"in",x,y,w:90,h:50,label:"In",cfg:{input:"Your input"}}:t==="out"?{id,type:"out",x,y,w:90,h:50,label:"Out",cfg:{}}:t==="gate"?{id,type:"gate",x,y,w:100,h:56,label:"Gate",cfg:{maxWords:60}}:L(id,x,y,t==="router"?"Router":"LLM call",{prompt:t==="router"?"Decide where this should go.\n\n{{input}}":"{{input}}"},150,t==="router"?"router":"llm"));
+  /* a free spot inside the canvas, so the new box can be connected at once */
+  const free=(x,y)=>!sb.nodes.some(n=>Math.abs(n.x-x)<(n.w+170)/2&&Math.abs(n.y-y)<(n.h+76)/2);
+  let x=500, y=VBH()-80; outer: for(const yy of [VBH()-80,90,VBH()/2]) for(const xx of [500,300,700,150,850]) if(free(xx,yy)){ x=xx; y=yy; break outer; }
+  sb.nodes.push(t==="in"?{id,type:"in",x,y,w:90,h:50,label:"In",cfg:{input:"Your input"}}:t==="out"?{id,type:"out",x,y,w:90,h:50,label:"Out",cfg:{}}:t==="gate"?{id,type:"gate",x,y,w:100,h:56,label:"Gate",cfg:{maxWords:60}}:L(id,x,y,"Agent",{prompt:"{{input}}"},150,"llm"));
   selected=id; save(); render(); renderPanel();
 });
 

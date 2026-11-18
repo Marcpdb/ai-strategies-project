@@ -5,7 +5,7 @@ description: "Builds the AI dashboard for the Single call strategy: the student'
 
 # Single call: build the AI dashboard
 
-One LLM call does the whole task, with tools: retrieval (searching notes), a calculator and memory.
+One agent does the whole task, with tools: retrieval (searching notes), a calculator and memory.
 
 This folder turns the student's manual dashboard (`2-manual-dashboard/dashboard.html`) and their export (`export/strategy.md`) into an AI-assisted dashboard that uses this strategy for the final decision of their workflow.
 

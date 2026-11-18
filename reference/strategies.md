@@ -20,14 +20,16 @@ Every `### <name>` is one node (in the playground a box also has a workflow step
 |---|---|
 | in | Sends the case (in a dashboard: `caseText()` built from the dashboard data) |
 | out | Receives the result. If there are several, only the ones that are reached count |
-| llm | One call to Claude with its model, effort, tools and prompt |
-| worker | An LLM call that does one sub-task from the orchestrator (`{{subtask}}`) |
-| router | An LLM call that sends the case to one of the boxes it connects to; the others are skipped |
-| gate | A check in code, not an LLM: passes when the text has at most `maxWords` words; when it fails, the flow follows the line labelled "Fail" |
-| orchestrator | An LLM call that plans sub-tasks, one per worker it connects to; extra workers are skipped |
-| evaluator | An LLM call that accepts or rejects what flows in. On reject, the box its loop line points to runs again with `{{feedback}}`, up to `maxRounds` |
+| llm | An agent: one call to Claude with its model, effort, tools and prompt |
+| worker | An agent that does one sub-task from the orchestrator (`{{subtask}}`) |
+| router | An agent that sends the case to one of the boxes it connects to; the others are skipped. Only in the Routing example and its template: the Sandbox has no Router button |
+| gate | A check in code, not an agent: passes when the text has at most `maxWords` words; when it fails, the flow follows the line labelled "Fail" |
+| orchestrator | An agent that plans sub-tasks, one per worker it connects to; extra workers are skipped |
+| evaluator | An agent that accepts or rejects what flows in. On reject, the box its loop line points to runs again with `{{feedback}}`, up to `maxRounds` |
 | debater | All debaters speak in every round, at the same time, with `{{debate}}` = everything said so far; `rounds` sets the number of rounds. They answer each other. A debater can stand for one step of the workflow (Debate (steps)) or for one possible outcome (Debate (dishes)) |
-| aux | Retrieval, Tools or Memory, drawn under an LLM. They light up when that LLM uses the tool |
+| aux | Retrieval, Tools or Memory, drawn under an agent. They light up when that agent uses the tool |
+
+Names: a single box is called **Agent**; the last agent before Out is always **Judge (…)**, with its role between brackets: Judge (choose), Judge (aggregator), Judge (synthesizer), Judge (evaluator), Judge (jury). In a template, debaters are called Actor 1, Actor 2, …
 
 ## Placeholders in prompts
 
